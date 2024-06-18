@@ -959,7 +959,6 @@ about:
   icons:
     - { class: "iconfont icon-github-fill", link: "https://github.com/p2tree", tip: "GitHub" }
     - { class: "iconfont icon-zhihu-fill", link: "https://zhihu.com/people/p2tree", tip: "知乎" }
-    - { class: "iconfont icon-linkedin-fill", link: "https://linkedin.com/in/liuming-yang", tip: "领英" }
 
 
 #---------------------------

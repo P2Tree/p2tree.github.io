@@ -224,23 +224,23 @@
     
     
       <div class="col-12 col-md-4 m-auto index-img">
-        <a href="/2024/06/16/hello-world/" target="_self">
-          <img src="/img/index_img.jpg" srcset="/img/loading.gif" lazyload alt="Hello World">
+        <a href="/2024/06/16/%E5%A4%84%E7%90%86%E5%99%A8barrier%E8%A1%8C%E4%B8%BA%E7%9A%84%E4%BB%BF%E7%9C%9F%E5%AE%9E%E7%8E%B0/" target="_self">
+          <img src="/img/20240616/index.jpg" srcset="/img/loading.gif" lazyload alt="处理器 barrier 行为的仿真实现">
         </a>
       </div>
     
     <article class="col-12 col-md-8 mx-auto index-info">
       <h2 class="index-header">
         
-        <a href="/2024/06/16/hello-world/" target="_self">
-          Hello World
+        <a href="/2024/06/16/%E5%A4%84%E7%90%86%E5%99%A8barrier%E8%A1%8C%E4%B8%BA%E7%9A%84%E4%BB%BF%E7%9C%9F%E5%AE%9E%E7%8E%B0/" target="_self">
+          处理器 barrier 行为的仿真实现
         </a>
       </h2>
 
       
-      <a class="index-excerpt " href="/2024/06/16/hello-world/" target="_self">
+      <a class="index-excerpt " href="/2024/06/16/%E5%A4%84%E7%90%86%E5%99%A8barrier%E8%A1%8C%E4%B8%BA%E7%9A%84%E4%BB%BF%E7%9C%9F%E5%AE%9E%E7%8E%B0/" target="_self">
         <div>
-          Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub. Quick
+          主题介绍由于编译器指令重排以及 CPU 乱序执行的问题，处理器指令有可能在多线程执行时遇到一些问题，比如数据竞争，死锁，非预期的计算结果等。为了避免这类潜在的问题，引入了 barrier 的概念。编译器会主动插入 barrier 指令来降低直接调整指令调度环节的复杂性，而硬件的非预期行为也只能通过软件强行做同步来避免。 在处理器架构领域，barrier 是一种同步行为，它通常是指令或者指令 mod
         </div>
       </a>
 
@@ -248,12 +248,27 @@
         
           <div class="post-meta mr-3">
             <i class="iconfont icon-date"></i>
-            <time datetime="2024-06-16 15:33" pubdate>
+            <time datetime="2024-06-16 10:00" pubdate>
               2024-06-16
             </time>
           </div>
         
         
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
+            
+              <a href="/tags/barrier/">#barrier</a>
+            
+              <a href="/tags/C/">#C++</a>
+            
+              <a href="/tags/%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/">#体系结构</a>
+            
+              <a href="/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/">#并发编程</a>
+            
+              <a href="/tags/%E4%BB%BF%E7%9C%9F/">#仿真</a>
+            
+          </div>
         
       </div>
     </article>

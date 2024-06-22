@@ -1,9 +1,14 @@
 ---
 title: 为什么终端开发离不开 Tmux
-tags: [Tmux, 终端开发, Terminal, 软件工具]
+tags:
+  - Tmux
+  - 终端开发
+  - Terminal
+  - 软件工具
 index_img: /img/20230623/index.jpg
 banner_img: /img/20230623/index.jpg
 date: 2023-06-23 10:00:00
+categories: 软件工具
 ---
 
 ## 开头叨叨

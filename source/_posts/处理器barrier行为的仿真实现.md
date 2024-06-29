@@ -1,11 +1,10 @@
 ---
 title: 处理器 barrier 行为的仿真实现
 tags:
-  - barrier
-  - C++
   - 体系结构
   - 并发编程
   - 仿真
+  - CPP
 index_img: /img/20240616/index.jpg
 banner_img: /img/20240616/index.jpg
 date: 2024-06-16 10:00:00

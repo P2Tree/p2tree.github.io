@@ -327,3 +327,7 @@ LLVM 文档提到，这种方案只有在开放结构中用，在其他场景下
 我们可以通过自定义 CastInfo 类型，来对这些 RTTI API 做更细致更灵活的定制。CastInfo 继承自 `CastIsPossible`，后者内部的实现就是我们前边介绍的，利用 classof 来决定类型判断和转换行为。
 
 早前的实现中没有 CastInfo 这一层，这次写文时才看到 LLVM 更新了文档，介绍了这部分内容，简单看了下实现，但目前还没有用到过，感兴趣小伙伴可以到 [How to set up LLVM-style RTTI for your class hierarchy — LLVM 18.0.0git documentation](https://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html#advanced-use-cases) 了解或者看源码 `include/llvm/Support/Casting.h` 学习，其中写了很多注释帮助理解。
+
+## 外链
+
+本文同步发布在知乎账号下 [LLVM 风格的 RTTI - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/650022272)

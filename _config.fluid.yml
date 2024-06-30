@@ -960,6 +960,7 @@ about:
     - { class: "iconfont icon-github-fill", link: "https://github.com/p2tree", tip: "GitHub" }
     - { class: "iconfont icon-zhihu-fill", link: "https://zhihu.com/people/p2tree", tip: "知乎" }
     - { class: "iconfont icon-xbox-fill", link: "https://quirky-olivine-7e6.notion.site/e00c9ab32a5245729d4f363a8fec7f29?pvs=4", tip: "游戏清单" }
+    - { class: "iconfont icon-books", link: "https://quirky-olivine-7e6.notion.site/bad1c85341764ffba1fdae02c0060245?pvs=4", tip: "读书清单" }
 
 
 #---------------------------

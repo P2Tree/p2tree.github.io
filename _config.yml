@@ -105,3 +105,28 @@ deploy:
   repo:
     github: https://github.com/p2tree/p2tree.github.io.git
   branch: master
+
+# minifier
+all_minifier: true
+html_minifier:
+  enable: false
+#   ignore_error: false
+#   exclude: source/about/index.html
+# css_minifier:
+#   enable: true
+#   exclude:
+#     - '*.min.css'
+# js_minifier:
+#   enable: true
+#   mangle: true
+#   output:
+#   compress:
+#   exclude:
+#     - '*.min.js'
+# image_minifier:
+#   enable: true 
+#   interlaced: false
+#   multipass: false
+#   optimizationLevel: 2
+#   pngquant: false
+#   progressive: false

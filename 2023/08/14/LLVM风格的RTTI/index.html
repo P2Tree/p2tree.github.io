@@ -1,1 +1,806 @@
-<!DOCTYPE html><html lang="en" data-default-color-scheme="auto"><head><meta charset="UTF-8"><link rel="apple-touch-icon" sizes="76x76" href="/img/avatar.jpg"><link rel="icon" href="/img/avatar.jpg"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,shrink-to-fit=no"><meta http-equiv="x-ua-compatible" content="ie=edge"><meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests"><meta name="theme-color" content="#2f4154"><meta name="author" content="P2Tree"><meta name="keywords" content=""><meta name="description" content="开头叨叨众所周知，LLVM project 没有开启 C++ 的 RTTI 特性。一个主要的原因是 LLVM project 认为 C++ RTTI 特性的实现需要使用到虚函数表，对性能并不友好。LLVM 自己实现了一种类似 RTTI 的行为。我们在开发 LLVM 代码时，尤其是需要自己搭建自定义的数据结构时，可能会想用到 RTTI，此时，学习在 LLVM 风格下如何创建类似的 API，就显得尤为"><meta property="og:type" content="article"><meta property="og:title" content="LLVM风格的RTTI"><meta property="og:url" content="http://p2tree.github.io/2023/08/14/LLVM%E9%A3%8E%E6%A0%BC%E7%9A%84RTTI/index.html"><meta property="og:site_name" content="P2Tree Home"><meta property="og:description" content="开头叨叨众所周知，LLVM project 没有开启 C++ 的 RTTI 特性。一个主要的原因是 LLVM project 认为 C++ RTTI 特性的实现需要使用到虚函数表，对性能并不友好。LLVM 自己实现了一种类似 RTTI 的行为。我们在开发 LLVM 代码时，尤其是需要自己搭建自定义的数据结构时，可能会想用到 RTTI，此时，学习在 LLVM 风格下如何创建类似的 API，就显得尤为"><meta property="og:locale" content="en_US"><meta property="og:image" content="http://p2tree.github.io/img/20230814/index.jpg"><meta property="article:published_time" content="2023-08-14T06:47:40.000Z"><meta property="article:modified_time" content="2024-06-29T07:30:24.087Z"><meta property="article:author" content="P2Tree"><meta property="article:tag" content="CPP"><meta property="article:tag" content="LLVM"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:image" content="http://p2tree.github.io/img/20230814/index.jpg"><meta name="referrer" content="no-referrer-when-downgrade"><title>LLVM风格的RTTI - P2Tree Home</title><link rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css"><link rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css"><link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css"><link rel="stylesheet" href="/css/main.css"><link id="highlight-css" rel="stylesheet" href="/css/highlight.css"><link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css"><script id="fluid-configs">var Fluid=window.Fluid||{};Fluid.ctx=Object.assign({},Fluid.ctx);var CONFIG={hostname:"p2tree.github.io",root:"/",version:"1.9.7",typing:{enable:!0,typeSpeed:70,cursorChar:"|",loop:!1,scope:[]},anchorjs:{enable:!0,element:"h1,h2,h3,h4,h5,h6",placement:"left",visible:"hover",icon:"❡"},progressbar:{enable:!0,height_px:3,color:"#29d",options:{showSpinner:!1,trickleSpeed:100}},code_language:{enable:!0,default:"TEXT"},copy_btn:!0,image_caption:{enable:!0},image_zoom:{enable:!0,img_url_replace:["",""]},toc:{enable:!0,placement:"right",headingSelector:"h1,h2,h3,h4,h5,h6",collapseDepth:0},lazyload:{enable:!0,loading_img:"/img/loading.gif",onlypost:!1,offset_factor:2},web_analytics:{enable:!1,follow_dnt:!0,baidu:null,google:{measurement_id:null},tencent:{sid:null,cid:null},woyaola:null,cnzz:null,leancloud:{app_id:null,app_key:null,server_url:null,path:"window.location.pathname",ignore_local:!1}},search_path:"/local-search.xml",include_content_in_search:!0};if(CONFIG.web_analytics.follow_dnt){var dntVal=navigator.doNotTrack||window.doNotTrack||navigator.msDoNotTrack;Fluid.ctx.dnt=dntVal&&(dntVal.startsWith("1")||dntVal.startsWith("yes")||dntVal.startsWith("on"))}</script><script src="/js/utils.js"></script><script src="/js/color-schema.js"></script><meta name="generator" content="Hexo 7.2.0"></head><body><header><div class="header-inner" style="height:70vh"><nav id="navbar" class="navbar fixed-top navbar-expand-lg navbar-dark scrolling-navbar"><div class="container"><a class="navbar-brand" href="/"><strong>P2Tree Home</strong> </a><button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><div class="animated-icon"><span></span><span></span><span></span></div></button><div class="collapse navbar-collapse" id="navbarSupportedContent"><ul class="navbar-nav ml-auto text-center"><li class="nav-item"><a class="nav-link" href="/" target="_self"><i class="iconfont icon-home-fill"></i> <span>Home</span></a></li><li class="nav-item"><a class="nav-link" href="/archives/" target="_self"><i class="iconfont icon-archive-fill"></i> <span>Archives</span></a></li><li class="nav-item"><a class="nav-link" href="/categories/" target="_self"><i class="iconfont icon-category-fill"></i> <span>Categories</span></a></li><li class="nav-item"><a class="nav-link" href="/tags/" target="_self"><i class="iconfont icon-tags-fill"></i> <span>Tags</span></a></li><li class="nav-item"><a class="nav-link" href="/about/" target="_self"><i class="iconfont icon-user-fill"></i> <span>About</span></a></li><li class="nav-item" id="search-btn"><a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search"><i class="iconfont icon-search"></i></a></li><li class="nav-item" id="color-toggle-btn"><a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle"><i class="iconfont icon-dark" id="color-toggle-icon"></i></a></li></ul></div></div></nav><div id="banner" class="banner" parallax="true" style="background:url(/img/20230814/index.jpg) no-repeat center center;background-size:cover"><div class="full-bg-img"><div class="mask flex-center" style="background-color:rgba(0,0,0,.3)"><div class="banner-text text-center fade-in-up"><div class="h2"><span id="subtitle" data-typed-text="LLVM风格的RTTI"></span></div><div class="mt-3"><span class="post-meta"><i class="iconfont icon-date-fill" aria-hidden="true"></i> <time datetime="2023-08-14 14:47" pubdate>August 14, 2023 pm</time></span></div><div class="mt-1"><span class="post-meta mr-2"><i class="iconfont icon-chart"></i> 2.8k words </span><span class="post-meta mr-2"><i class="iconfont icon-clock-fill"></i> 24 mins</span></div></div></div></div></div></div></header><main><div class="container-fluid nopadding-x"><div class="row nomargin-x"><div class="side-col d-none d-lg-block col-lg-2"></div><div class="col-lg-8 nopadding-x-md"><div class="container nopadding-x-md" id="board-ctn"><div id="board"><article class="post-content mx-auto"><h1 id="seo-header">LLVM风格的RTTI</h1><div class="markdown-body"><h2 id="开头叨叨"><a href="#开头叨叨" class="headerlink" title="开头叨叨"></a>开头叨叨</h2><p>众所周知，LLVM project 没有开启 C++ 的 RTTI 特性。一个主要的原因是 LLVM project 认为 C++ RTTI 特性的实现需要使用到虚函数表，对性能并不友好。LLVM 自己实现了一种类似 RTTI 的行为。我们在开发 LLVM 代码时，尤其是需要自己搭建自定义的数据结构时，可能会想用到 RTTI，此时，学习在 LLVM 风格下如何创建类似的 API，就显得尤为重要。</p><h2 id="什么是-RTTI"><a href="#什么是-RTTI" class="headerlink" title="什么是 RTTI"></a>什么是 RTTI</h2><p>难度：⭐</p><p>RTTI 是运行时类型识别，全称 Runtime Type Identification，网上有很多介绍这个的资料，属于 C++ 程序员必须要熟悉的内容。</p><p>它的主要目的是为程序运行时提供一种对对象类型的获取、操作的方式。</p><p>对应到 C++ API 上，有三个 API 会用到 RTTI：</p><ul><li>dynamic_cast，用来将一个指向基类的指针转换为一个指向派生类的指针，如果转换失败，会返回 nullptr</li><li>typeid，用来返回对象类型的值</li><li>type_info，也就是 typeid 的返回类型，用来存储描述类型的信息</li></ul><p>如果不使用这三个 API，关闭 RTTI 不会影响代码行为。</p><p>需要注意的是，RTTI 只能用于包含了虚函数的类，也就是需要虚函数表来提供负责转换类型和提取真实类型的信息。</p><h2 id="LLVM-的-RTTI-替代方案"><a href="#LLVM-的-RTTI-替代方案" class="headerlink" title="LLVM 的 RTTI 替代方案"></a>LLVM 的 RTTI 替代方案</h2><blockquote><p>参考自：<a target="_blank" rel="noopener" href="https://www.llvm.org/docs/ProgrammersManual.html#important-and-useful-llvm-apis">LLVM Programmer’s Manual — LLVM 18.0.0git documentation</a></p></blockquote><p>难度：⭐</p><p>回到主题，LLVM project 构建中，默认把 RTTI 关闭了，也就是使能了 <code>-fno-rtti</code> 编译选项。</p><p>LLVM 设计了另外一种方式来实现 RTTI，这种做法可以更高效且灵活的完成如继承结构向下类型转换和获取类型并判定的功能。</p><p>LLVM 提供了以下 API：</p><ul><li><code>dyn_cast</code>，作为 dynamic_cast 的替代，用来检查一个特定类型的对象，并将其转换为指定的派生类型。如果转换是非法的，会返回 nullptr。这个 API 不能用于引用（dynamic_cast 可以用于引用，非法转换会返回 bad_cast 异常）</li><li><code>isa</code>，类似于 java 的 instanceof，用来判定一个对象是否是某个类型。返回 bool 类型，可以判断指针或引用类型</li><li><code>cast</code>，和 dyn_cast 类型一样，但可以既接受指针又接受引用类型，之所以能接受引用类型，是由于它在非法转换时，会发生 assertion 失败。所以，这需要在使用前预先确认 cast 不会失败才行，也就是通常要和 isa 配合使用。</li></ul><p>另外，还有 <code>dyn_cast_or_null</code>，<code>isa_and_nonnull</code> 和 <code>cast_or_null</code> 等扩展接口，它们是对应的能接受 nullptr 作为参数的 API。需要注意，dyn_cast_or_null 和 cast_or_null 接口已经在新版 LLVM 中被标记为 deprecated，用来替代它们的 API 是 cast_if_present，有关于这些接口的使用和实现，可以参考 <code>include/llvm/Support/Casting.h</code> 文件。</p><p>我们在平时编码时，很容易遇到这些应用场景，比如当拿到一个 MI 指令时，需要通过判断这个指令是哪种类型，来决定要采取哪种操作，如：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// 获取特定类型指令的 operand type</span><br><span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> *Ld = <span class="hljs-built_in">dyn_cast</span>&lt;LoadInst&gt;(V))<br>  Ty = <span class="hljs-built_in">cast</span>&lt;PointerType&gt;(Ld-&gt;<span class="hljs-built_in">getPointerOperandType</span>())-&gt;<span class="hljs-built_in">getElementType</span>();<br><br><span class="hljs-comment">// 判断一个 operand 是否是 Integer type</span><br><span class="hljs-keyword">if</span> (<span class="hljs-built_in">isa</span>&lt;IntegerType&gt;(V-&gt;<span class="hljs-built_in">getType</span>()))<br>  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br></code></pre></td></tr></table></figure><p>要尽可能使用这种风格的代码实现，而不是使用 if-else 风格 get 具体 enum kind 的形式。</p><h2 id="设计自定义类继承结构的-RTTI-API"><a href="#设计自定义类继承结构的-RTTI-API" class="headerlink" title="设计自定义类继承结构的 RTTI API"></a>设计自定义类继承结构的 RTTI API</h2><blockquote><p>参考自：<a target="_blank" rel="noopener" href="https://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html#how-to-set-up-llvm-style-rtti-for-your-class-hierarchy">How to set up LLVM-style RTTI for your class hierarchy — LLVM 18.0.0git documentation</a></p></blockquote><p>难度：⭐⭐</p><p>如果只是使用 API，前边章节的内容已经足够了，但如果是需要设计自己的类型，那么学习 LLVM 如何做到这些，也是很有意义的。由于 LLVM 关闭了 RTTI，所以我们需要手动维护一套类型机制来标记类型信息，即我们不需要依赖虚函数表来实现 RTTI。</p><p>假设我们有这样一个类结构：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">CustomMCInst</span> &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">CustomMCInst</span>() &#123;&#125;<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">LSAMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br></code></pre></td></tr></table></figure><p>首先，我们需要 include 头文件：<code>#include “llvm/Support/Casting.h”</code>，这个头文件中描述了上述的 API 声明及实现。</p><p>然后，在 CustomMCInst 中，需要增加一个用来描述各种 Kind 的 enum，这些 Kind 将用来描述各个派生类的类型（加粗部分为新增代码）：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">CustomMCInst</span> &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">CustomMCInst</span>() &#123;&#125;<br>  **<span class="hljs-built_in">CustomMCInst</span>(InstKind K) : <span class="hljs-built_in">Kind</span>(K) &#123;&#125;**<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;<br><br>  **<span class="hljs-keyword">enum</span> <span class="hljs-title class_">InstKind</span> &#123;<br>    IK_ALU,<br>    IK_LSA<br>  &#125;;<br>  <span class="hljs-function">InstKind <span class="hljs-title">getKind</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123; <span class="hljs-keyword">return</span> Kind; &#125;<br><span class="hljs-keyword">private</span>:<br>  <span class="hljs-type">const</span> InstKind Kind;**<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">LSAMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br></code></pre></td></tr></table></figure><p>这里使用 Kind，而不是 type 或 classes 等名词，是为了和 LLVM 中其他常见的关键词做区分。最好将 Kind 和 getKind() 都保持使用相同的名称。</p><p>之后，需要将所有派生自基类的子类型，都设置为对应的 Kind。</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// ... 省略基类代码</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  **<span class="hljs-built_in">ALUMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_ALU) &#123;&#125;**<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">LSAMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  **<span class="hljs-built_in">LSAMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_LSA) &#123;&#125;**<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br></code></pre></td></tr></table></figure><p>最后，还需要实现 LLVM RTTI 的模版接口，用来能够提供给如 dyn_cast 和 isa 来决定类型的调用。实现方式是通过一个静态的成员函数 classof 来作为 dyn_cast 和 isa 的调用接口。</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// ... 省略基类代码</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">ALUMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_ALU) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  **<span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_ALU;<br>  &#125;**<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">LSAMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">LSAMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_LSA) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>  <br>  **<span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_LSA;<br>  &#125;**<br>&#125;;<br></code></pre></td></tr></table></figure><p>这里 classof 这个接口，是必须要叫这个名字的，因为在 dyn_cast 和 isa 的实现中，最终是调用了一个类型的 <code>::classof</code> 接口。留意到，我们的抽象基类并没有提供 classof 接口，因为这是没有必要的，不必要给不能实现对象的类提供类型。</p><p>以上就是完整的实现步骤。当我们具体使用时（调用方），可以：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">MCOperand <span class="hljs-title">getDstOp</span><span class="hljs-params">(CustomMCInst *I)</span> </span>&#123;<br>  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> * IALU = <span class="hljs-built_in">dyn_cast</span>&lt;ALUMCInst&gt;(I)) &#123;<br>    <span class="hljs-keyword">return</span> IALU-&gt;<span class="hljs-built_in">getDstOpernad</span>();<br>  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> * ILSA = <span class="hljs-built_in">dyn_cast</span>&lt;LSAMCInst&gt;(I)) &#123;<br>    <span class="hljs-keyword">return</span> ILSA-&gt;<span class="hljs-built_in">getOperand</span>();<br>  <span class="hljs-keyword">else</span> <br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">MCOperand</span>()<br>&#125;<br></code></pre></td></tr></table></figure><p>需要注意，所有非抽象类，都应该实现 classof 接口，即使它不是叶子类型。另外，classof 的参数将始终应该是抽象类类型。</p><p>进一步扩展一下，我们的 classof 函数实现，并不一定要求一定是 <code>return i→getKind() == IK_A_KIND</code>，事实上，任何能够决定类型，且返回 bool 状态的内部实现，都可以用来实现 classof。这些在我们实现更复杂的类继承结构中会考虑用到。</p><h2 id="深层次继承结构"><a href="#深层次继承结构" class="headerlink" title="深层次继承结构"></a>深层次继承结构</h2><p>难度：⭐⭐</p><p>上边提到，当一个非抽象类型，并不是叶子类型（也就是它自身还有子类派生），我们也应该提供 classof 接口。这是因为任何非抽象类型都可以成为在运行时需要动态识别和转换类型的入参。</p><p>对于这种多层的继承结构，有一些额外的规则：</p><ul><li>非抽象类型都要提供 classof 接口</li><li>非叶子类型的 classof 实现，需要将其子类型包含在其中</li></ul><p>举例来说，我们对上边的代码做扩展，将 ALU 指令分为 ARITH 指令和 LOGIC 指令：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">CustomMCInst</span> &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">CustomMCInst</span>() &#123;&#125;<br>  <span class="hljs-built_in">CustomMCInst</span>(InstKind K) : <span class="hljs-built_in">Kind</span>(K) &#123;&#125;<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;<br><br>  <span class="hljs-keyword">enum</span> <span class="hljs-title class_">InstKind</span> &#123;<br>    IK_ALU,<br>    **IK_ARITH,<br>    IK_LOGIC,**<br>    IK_LSA<br>  &#125;;<br>  <span class="hljs-function">InstKind <span class="hljs-title">getKind</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123; <span class="hljs-keyword">return</span> Kind; &#125;<br><span class="hljs-keyword">private</span>:<br>  <span class="hljs-type">const</span> InstKind Kind;<br>&#125;;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">ALUMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_ALU) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    **<span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() &gt;= IK_ALU &amp;&amp; I-&gt;<span class="hljs-built_in">getKind</span>() &lt;= IK_LOGIC;**<br>  &#125;<br>&#125;;<br>**<span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUArithMCInst</span> : <span class="hljs-keyword">public</span> ALUMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">ALUArithMCInst</span>() : <span class="hljs-built_in">ALUMCInst</span>(IK_ARITH) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_ARITH;<br>  &#125;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALULogicMCInst</span> : <span class="hljs-keyword">public</span> ALUMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">ALULogicMCInst</span>() : <span class="hljs-built_in">ALUMCInst</span>(IK_LOGIC) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_LOGIC;<br>  &#125;<br>&#125;;**<br><br><span class="hljs-comment">// ... 省略 LSAMCInst 代码</span><br></code></pre></td></tr></table></figure><p>我们扩展了 <code>ALUMCInst::classof</code>中的实现，使用范围 enum 来将所有是 ALU 类型及其子类型的 InstKind 都考虑进来。然后，我们实现子类型 ALUArithMCInst 和 ALULogicMCInst 如之前。</p><p>这种实现需要留意避免调整 enum 顺序时造成 bug，更常见的做法可能是：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">ALUMCInst::classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>  <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_ALU || I-&gt;<span class="hljs-built_in">getKind</span>() == IK_ARITH || I-&gt;<span class="hljs-built_in">getKind</span>() == IK_LOGIC;<br>&#125;<br></code></pre></td></tr></table></figure><h2 id="潜在的-Bug"><a href="#潜在的-Bug" class="headerlink" title="潜在的 Bug"></a>潜在的 Bug</h2><p>难度：⭐⭐</p><p>应当仔细做到在这些非叶子类型非抽象类中，classof 总是能囊括所有的子类类型，在整个类继承结构完成之后，应该再次检查 classof 的正确性，以避免潜在 Bug。</p><p>LLVM 文档中提到可以借用假的 enum flag 来标记一类 Kind 的结束为止，从而让 classof 的维护没那么容易引入问题。</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">enum</span> <span class="hljs-title class_">CustomMCInst</span>::InstKind &#123;<br>  IK_ALU,<br>  IK_ARITH,<br>  IK_LOGIC,<br>  **IK_ALU_END,**<br>  IK_LSA<br>&#125;;<br><br><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">ALUMCInst::classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>  **<span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() &gt;= IK_ALU &amp;&amp; I-&gt;<span class="hljs-built_in">getKind</span>() &lt;= IK_ALU_END**; <br>&#125;<br></code></pre></td></tr></table></figure><p>尾区间选择开区间还是闭区间并不重要，毕竟不会有一个类型是假的 IK_ALU_END，当然为了避免意外使用，选择闭区间的出错概率可能低一些。</p><p>之后，我们如果想继续扩展 ALU 类指令，就只需要在 <code>CustomMCInst::InstKind</code> 中的 IK_ALU 和 IK_ALU_END 之间加入新类型即可，而不需要再次调整 <code>ALUMCInst::classof</code> 的实现。</p><h2 id="开放的类继承结构"><a href="#开放的类继承结构" class="headerlink" title="开放的类继承结构"></a>开放的类继承结构</h2><p>难度：⭐⭐⭐</p><p>前边描述实现 LLVM RTTI 的这套方法，依赖一个大前提，即我们需要在实现整个代码前，已经设计好了完整的类结构。</p><p>但如果因为业务需要，我们无法在设计完成时确定类继承结构，即我们的类结构是开放形式时，应该怎么实现 LLVM RTTI 呢，LLVM 文档中为我们简单介绍了一下它提供的一种新的机制：ExtensibleRTTI。</p><p>开放的继承结构，以本文例子来说，就是我们设计了整套 CustomMCInst 的类结构，但依然需要在将来由其他用户对这个类结构做扩展，而其他用户无法帮我们继续维护之前的 InstKind 和 classof 实现。</p><p>这种新机制和前文的方案完全无关，可以在需要时再进一步了解。</p><p>LLVM 提供了两个类：<code>RTTIRoot</code> 和 <code>RTTIExtends</code>，前者用来实现 RTTI 检查，后者提供了一种机制，使当前类型能够继承自 RTTIRoot，它接受两个模版参数，分别是当前类型和 RTTIRoot。</p><p>所有自定义类型（抽象类和派生类）都需要继承自 RTTIExtends，真正的继承关系由 RTTIExtends 负责建立。并且，所有自定义类型，都需要提供一个名为 <code>ID</code> 的 static char 成员，用来让 RTTIExtends 管理特定类型。</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">CustomMCInst</span> : **<span class="hljs-keyword">public</span> RTTIExtends&lt;CustomMCInst, RTTIRoot&gt;** &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">CustomMCInst</span>() &#123;&#125;<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;<br><br>  **<span class="hljs-type">static</span> <span class="hljs-type">char</span> ID;**<br>&#125;;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : **<span class="hljs-keyword">public</span> RTTIExtends&lt;ALUMCInst, CustomMCInst&gt;** &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  **<span class="hljs-type">static</span> <span class="hljs-type">char</span> ID;**<br>&#125;;<br><br><span class="hljs-type">char</span> CustomMCInst::ID = <span class="hljs-number">0</span>;<br><span class="hljs-type">char</span> ALUMCInst::ID = <span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure><p>这种实现方案，不再需要手动管理各种 Kind 和 classof，唯一需要的就是将所有类型都设计在 RTTIExtends 之下。</p><p>LLVM 文档提到，这种方案只有在开放结构中用，在其他场景下，还是应该使用之前介绍的标准 LLVM RTTI 方式。</p><h2 id="进阶用法"><a href="#进阶用法" class="headerlink" title="进阶用法"></a>进阶用法</h2><p>难度：⭐⭐⭐</p><p><code>isa/cast/dyn_cast</code> 这些接口的底层实现是 <code>CastInfo</code>，CastInfo 提供了 4 个方法，<code>isPossible</code>，<code>doCast</code>，<code>castFailed</code>，<code>doCastIfPossible</code>。这些方法用来对应实现 isa，cast，dyn_cast。</p><p>我们可以通过自定义 CastInfo 类型，来对这些 RTTI API 做更细致更灵活的定制。CastInfo 继承自 <code>CastIsPossible</code>，后者内部的实现就是我们前边介绍的，利用 classof 来决定类型判断和转换行为。</p><p>早前的实现中没有 CastInfo 这一层，这次写文时才看到 LLVM 更新了文档，介绍了这部分内容，简单看了下实现，但目前还没有用到过，感兴趣小伙伴可以到 <a target="_blank" rel="noopener" href="https://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html#advanced-use-cases">How to set up LLVM-style RTTI for your class hierarchy — LLVM 18.0.0git documentation</a> 了解或者看源码 <code>include/llvm/Support/Casting.h</code> 学习，其中写了很多注释帮助理解。</p><h2 id="外链"><a href="#外链" class="headerlink" title="外链"></a>外链</h2><p>本文同步发布在知乎账号下 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/650022272">LLVM 风格的 RTTI - 知乎 (zhihu.com)</a></p></div><hr><div><div class="post-metas my-3"><div class="post-meta mr-3 d-flex align-items-center"><i class="iconfont icon-category"></i> <span class="category-chains"><span class="category-chain"><a href="/categories/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/" class="category-chain-item">软件开发</a></span></span></div><div class="post-meta"><i class="iconfont icon-tags"></i> <a href="/tags/CPP/" class="print-no-link">#CPP</a> <a href="/tags/LLVM/" class="print-no-link">#LLVM</a></div></div><div class="license-box my-3"><div class="license-title"><div>LLVM风格的RTTI</div><div>http://p2tree.github.io/2023/08/14/LLVM风格的RTTI/</div></div><div class="license-meta"><div class="license-meta-item"><div>Author</div><div>P2Tree</div></div><div class="license-meta-item license-meta-date"><div>Posted on</div><div>August 14, 2023</div></div><div class="license-meta-item"><div>Licensed under</div><div><a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/"><span class="hint--top hint--rounded" aria-label="BY - Attribution"><i class="iconfont icon-by"></i></span></a></div></div></div><div class="license-icon iconfont"></div></div><div class="post-prevnext my-3"><article class="post-prev col-6"><a href="/2023/10/14/Vim%20%E9%AB%98%E6%95%88%E7%BC%96%E8%BE%91%E6%8A%80%E5%B7%A7/" title="Vim 高效编辑技巧"><i class="iconfont icon-arrowleft"></i> <span class="hidden-mobile">Vim 高效编辑技巧</span> <span class="visible-mobile">Previous</span></a></article><article class="post-next col-6"><a href="/2023/06/23/%E4%B8%BA%E4%BB%80%E4%B9%88%E7%BB%88%E7%AB%AF%E5%BC%80%E5%8F%91%E7%A6%BB%E4%B8%8D%E5%BC%80Tmux/" title="为什么终端开发离不开 Tmux"><span class="hidden-mobile">为什么终端开发离不开 Tmux</span> <span class="visible-mobile">Next</span> <i class="iconfont icon-arrowright"></i></a></article></div></div><article id="comments" lazyload><script type="text/javascript">Fluid.utils.loadComments("#comments",(function(){var t=document.documentElement.getAttribute("data-user-color-scheme");t="dark"===t?"github-dark":"github-light",window.UtterancesThemeLight="github-light",window.UtterancesThemeDark="github-dark";var e=document.createElement("script");e.setAttribute("src","https://utteranc.es/client.js"),e.setAttribute("repo","p2tree/p2tree.github.io"),e.setAttribute("issue-term","pathname"),e.setAttribute("label","utterances"),e.setAttribute("theme",t),e.setAttribute("crossorigin","anonymous"),document.getElementById("comments").appendChild(e)}))</script><noscript>Please enable JavaScript to view the comments</noscript></article></article></div></div></div><div class="side-col d-none d-lg-block col-lg-2"><aside class="sidebar" style="margin-left:-1rem"><div id="toc"><p class="toc-header"><i class="iconfont icon-list"></i> <span>Table of Contents</span></p><div class="toc-body" id="toc-body"></div></div></aside></div></div></div><a id="scroll-top-button" aria-label="TOP" href="#" role="button"><i class="iconfont icon-arrowup" aria-hidden="true"></i></a><div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable modal-lg" role="document"><div class="modal-content"><div class="modal-header text-center"><h4 class="modal-title w-100 font-weight-bold">Search</h4><button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></div><div class="modal-body mx-3"><div class="md-form mb-5"><input type="text" id="local-search-input" class="form-control validate"> <label data-error="x" data-success="v" for="local-search-input">Keyword</label></div><div class="list-group" id="local-search-result"></div></div></div></div></div></main><footer><div class="footer-inner"><div class="footer-content"><a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a></div><div class="statistics"><span id="busuanzi_container_site_pv" style="display:none">Views: <span id="busuanzi_value_site_pv"></span> </span><span id="busuanzi_container_site_uv" style="display:none">Visitors: <span id="busuanzi_value_site_uv"></span></span></div></div></footer><script src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js"></script><link rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css"><script>NProgress.configure({showSpinner:!1,trickleSpeed:100}),NProgress.start(),window.addEventListener("load",(function(){NProgress.done()}))</script><script src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js"></script><script src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js"></script><script src="/js/events.js"></script><script src="/js/plugins.js"></script><script src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js"></script><script>!function(t,e){var i=Fluid.plugins.typing,n=e.getElementById("subtitle");n&&i&&i(n.getAttribute("data-typed-text"))}(window,document)</script><script src="/js/img-lazyload.js"></script><script>Fluid.utils.createScript("https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js",(function(){var t=jQuery("#toc");if(0!==t.length&&window.tocbot){var i=jQuery("#board-ctn").offset().top;window.tocbot.init(Object.assign({tocSelector:"#toc-body",contentSelector:".markdown-body",linkClass:"tocbot-link",activeLinkClass:"tocbot-active-link",listClass:"tocbot-list",isCollapsedClass:"tocbot-is-collapsed",collapsibleClass:"tocbot-is-collapsible",scrollSmooth:!0,includeTitleTags:!0,headingsOffset:-i},CONFIG.toc)),t.find(".toc-list-item").length>0&&t.css("visibility","visible"),Fluid.events.registerRefreshCallback((function(){if("tocbot"in window){tocbot.refresh();var t=jQuery("#toc");if(0===t.length||!tocbot)return;t.find(".toc-list-item").length>0&&t.css("visibility","visible")}}))}}))</script><script src="https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js"></script><script>Fluid.plugins.codeWidget()</script><script>Fluid.utils.createScript("https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js",(function(){window.anchors.options={placement:CONFIG.anchorjs.placement,visible:CONFIG.anchorjs.visible},CONFIG.anchorjs.icon&&(window.anchors.options.icon=CONFIG.anchorjs.icon);var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(window.anchors.options.class="anchorjs-link-left"),window.anchors.add(o.join(", ")),Fluid.events.registerRefreshCallback((function(){if("anchors"in window){anchors.removeAll();var n=(CONFIG.anchorjs.element||"h1,h2,h3,h4,h5,h6").split(","),o=[];for(var s of n)o.push(".markdown-body > "+s.trim());"left"===CONFIG.anchorjs.placement&&(anchors.options.class="anchorjs-link-left"),anchors.add(o.join(", "))}}))}))</script><script>Fluid.utils.createScript("https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js",(function(){Fluid.plugins.fancyBox()}))</script><script>Fluid.plugins.imageCaption()</script><script src="/js/local-search.js"></script><script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="/js/boot.js"></script><noscript><div class="noscript-warning">Blog works best with JavaScript enabled</div></noscript></body></html>
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/avatar.jpg">
+  <link rel="icon" href="/img/avatar.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="P2Tree">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="开头叨叨众所周知，LLVM project 没有开启 C++ 的 RTTI 特性。一个主要的原因是 LLVM project 认为 C++ RTTI 特性的实现需要使用到虚函数表，对性能并不友好。LLVM 自己实现了一种类似 RTTI 的行为。我们在开发 LLVM 代码时，尤其是需要自己搭建自定义的数据结构时，可能会想用到 RTTI，此时，学习在 LLVM 风格下如何创建类似的 API，就显得尤为">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLVM风格的RTTI">
+<meta property="og:url" content="http://p2tree.github.io/2023/08/14/LLVM%E9%A3%8E%E6%A0%BC%E7%9A%84RTTI/index.html">
+<meta property="og:site_name" content="P2Tree Home">
+<meta property="og:description" content="开头叨叨众所周知，LLVM project 没有开启 C++ 的 RTTI 特性。一个主要的原因是 LLVM project 认为 C++ RTTI 特性的实现需要使用到虚函数表，对性能并不友好。LLVM 自己实现了一种类似 RTTI 的行为。我们在开发 LLVM 代码时，尤其是需要自己搭建自定义的数据结构时，可能会想用到 RTTI，此时，学习在 LLVM 风格下如何创建类似的 API，就显得尤为">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://p2tree.github.io/img/20230814/index.jpg">
+<meta property="article:published_time" content="2023-08-14T06:47:40.000Z">
+<meta property="article:modified_time" content="2024-06-29T07:30:24.087Z">
+<meta property="article:author" content="P2Tree">
+<meta property="article:tag" content="CPP">
+<meta property="article:tag" content="LLVM">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://p2tree.github.io/img/20230814/index.jpg">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLVM风格的RTTI - P2Tree Home</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"p2tree.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"|","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"❡"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>P2Tree Home</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/20230814/index.jpg') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLVM风格的RTTI"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-08-14 14:47" pubdate>
+          August 14, 2023 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          2.8k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          24 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">LLVM风格的RTTI</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <h2 id="开头叨叨"><a href="#开头叨叨" class="headerlink" title="开头叨叨"></a>开头叨叨</h2><p>众所周知，LLVM project 没有开启 C++ 的 RTTI 特性。一个主要的原因是 LLVM project 认为 C++ RTTI 特性的实现需要使用到虚函数表，对性能并不友好。LLVM 自己实现了一种类似 RTTI 的行为。我们在开发 LLVM 代码时，尤其是需要自己搭建自定义的数据结构时，可能会想用到 RTTI，此时，学习在 LLVM 风格下如何创建类似的 API，就显得尤为重要。</p>
+<h2 id="什么是-RTTI"><a href="#什么是-RTTI" class="headerlink" title="什么是 RTTI"></a>什么是 RTTI</h2><p>难度：⭐</p>
+<p>RTTI 是运行时类型识别，全称 Runtime Type Identification，网上有很多介绍这个的资料，属于 C++ 程序员必须要熟悉的内容。</p>
+<p>它的主要目的是为程序运行时提供一种对对象类型的获取、操作的方式。</p>
+<p>对应到 C++ API 上，有三个 API 会用到 RTTI：</p>
+<ul>
+<li>dynamic_cast，用来将一个指向基类的指针转换为一个指向派生类的指针，如果转换失败，会返回 nullptr</li>
+<li>typeid，用来返回对象类型的值</li>
+<li>type_info，也就是 typeid 的返回类型，用来存储描述类型的信息</li>
+</ul>
+<p>如果不使用这三个 API，关闭 RTTI 不会影响代码行为。</p>
+<p>需要注意的是，RTTI 只能用于包含了虚函数的类，也就是需要虚函数表来提供负责转换类型和提取真实类型的信息。</p>
+<h2 id="LLVM-的-RTTI-替代方案"><a href="#LLVM-的-RTTI-替代方案" class="headerlink" title="LLVM 的 RTTI 替代方案"></a>LLVM 的 RTTI 替代方案</h2><blockquote>
+<p>参考自：<a target="_blank" rel="noopener" href="https://www.llvm.org/docs/ProgrammersManual.html#important-and-useful-llvm-apis">LLVM Programmer’s Manual — LLVM 18.0.0git documentation</a></p>
+</blockquote>
+<p>难度：⭐</p>
+<p>回到主题，LLVM project 构建中，默认把 RTTI 关闭了，也就是使能了 <code>-fno-rtti</code> 编译选项。</p>
+<p>LLVM 设计了另外一种方式来实现 RTTI，这种做法可以更高效且灵活的完成如继承结构向下类型转换和获取类型并判定的功能。</p>
+<p>LLVM 提供了以下 API：</p>
+<ul>
+<li><code>dyn_cast</code>，作为 dynamic_cast 的替代，用来检查一个特定类型的对象，并将其转换为指定的派生类型。如果转换是非法的，会返回 nullptr。这个 API 不能用于引用（dynamic_cast 可以用于引用，非法转换会返回 bad_cast 异常）</li>
+<li><code>isa</code>，类似于 java 的 instanceof，用来判定一个对象是否是某个类型。返回 bool 类型，可以判断指针或引用类型</li>
+<li><code>cast</code>，和 dyn_cast 类型一样，但可以既接受指针又接受引用类型，之所以能接受引用类型，是由于它在非法转换时，会发生 assertion 失败。所以，这需要在使用前预先确认 cast 不会失败才行，也就是通常要和 isa 配合使用。</li>
+</ul>
+<p>另外，还有 <code>dyn_cast_or_null</code>，<code>isa_and_nonnull</code> 和 <code>cast_or_null</code> 等扩展接口，它们是对应的能接受 nullptr 作为参数的 API。需要注意，dyn_cast_or_null 和 cast_or_null 接口已经在新版 LLVM 中被标记为 deprecated，用来替代它们的 API 是 cast_if_present，有关于这些接口的使用和实现，可以参考 <code>include/llvm/Support/Casting.h</code> 文件。</p>
+<p>我们在平时编码时，很容易遇到这些应用场景，比如当拿到一个 MI 指令时，需要通过判断这个指令是哪种类型，来决定要采取哪种操作，如：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// 获取特定类型指令的 operand type</span><br><span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> *Ld = <span class="hljs-built_in">dyn_cast</span>&lt;LoadInst&gt;(V))<br>  Ty = <span class="hljs-built_in">cast</span>&lt;PointerType&gt;(Ld-&gt;<span class="hljs-built_in">getPointerOperandType</span>())-&gt;<span class="hljs-built_in">getElementType</span>();<br><br><span class="hljs-comment">// 判断一个 operand 是否是 Integer type</span><br><span class="hljs-keyword">if</span> (<span class="hljs-built_in">isa</span>&lt;IntegerType&gt;(V-&gt;<span class="hljs-built_in">getType</span>()))<br>  <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;<br></code></pre></td></tr></table></figure>
+
+<p>要尽可能使用这种风格的代码实现，而不是使用 if-else 风格 get 具体 enum kind 的形式。</p>
+<h2 id="设计自定义类继承结构的-RTTI-API"><a href="#设计自定义类继承结构的-RTTI-API" class="headerlink" title="设计自定义类继承结构的 RTTI API"></a>设计自定义类继承结构的 RTTI API</h2><blockquote>
+<p>参考自：<a target="_blank" rel="noopener" href="https://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html#how-to-set-up-llvm-style-rtti-for-your-class-hierarchy">How to set up LLVM-style RTTI for your class hierarchy — LLVM 18.0.0git documentation</a></p>
+</blockquote>
+<p>难度：⭐⭐</p>
+<p>如果只是使用 API，前边章节的内容已经足够了，但如果是需要设计自己的类型，那么学习 LLVM 如何做到这些，也是很有意义的。由于 LLVM 关闭了 RTTI，所以我们需要手动维护一套类型机制来标记类型信息，即我们不需要依赖虚函数表来实现 RTTI。</p>
+<p>假设我们有这样一个类结构：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">CustomMCInst</span> &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">CustomMCInst</span>() &#123;&#125;<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">LSAMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>首先，我们需要 include 头文件：<code>#include “llvm/Support/Casting.h”</code>，这个头文件中描述了上述的 API 声明及实现。</p>
+<p>然后，在 CustomMCInst 中，需要增加一个用来描述各种 Kind 的 enum，这些 Kind 将用来描述各个派生类的类型（加粗部分为新增代码）：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">CustomMCInst</span> &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">CustomMCInst</span>() &#123;&#125;<br>  **<span class="hljs-built_in">CustomMCInst</span>(InstKind K) : <span class="hljs-built_in">Kind</span>(K) &#123;&#125;**<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;<br><br>  **<span class="hljs-keyword">enum</span> <span class="hljs-title class_">InstKind</span> &#123;<br>    IK_ALU,<br>    IK_LSA<br>  &#125;;<br>  <span class="hljs-function">InstKind <span class="hljs-title">getKind</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123; <span class="hljs-keyword">return</span> Kind; &#125;<br><span class="hljs-keyword">private</span>:<br>  <span class="hljs-type">const</span> InstKind Kind;**<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">LSAMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>这里使用 Kind，而不是 type 或 classes 等名词，是为了和 LLVM 中其他常见的关键词做区分。最好将 Kind 和 getKind() 都保持使用相同的名称。</p>
+<p>之后，需要将所有派生自基类的子类型，都设置为对应的 Kind。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// ... 省略基类代码</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  **<span class="hljs-built_in">ALUMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_ALU) &#123;&#125;**<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">LSAMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  **<span class="hljs-built_in">LSAMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_LSA) &#123;&#125;**<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>最后，还需要实现 LLVM RTTI 的模版接口，用来能够提供给如 dyn_cast 和 isa 来决定类型的调用。实现方式是通过一个静态的成员函数 classof 来作为 dyn_cast 和 isa 的调用接口。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-comment">// ... 省略基类代码</span><br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">ALUMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_ALU) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  **<span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_ALU;<br>  &#125;**<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">LSAMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">LSAMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_LSA) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br>  <br>  **<span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_LSA;<br>  &#125;**<br>&#125;;<br></code></pre></td></tr></table></figure>
+
+<p>这里 classof 这个接口，是必须要叫这个名字的，因为在 dyn_cast 和 isa 的实现中，最终是调用了一个类型的 <code>::classof</code> 接口。留意到，我们的抽象基类并没有提供 classof 接口，因为这是没有必要的，不必要给不能实现对象的类提供类型。</p>
+<p>以上就是完整的实现步骤。当我们具体使用时（调用方），可以：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function">MCOperand <span class="hljs-title">getDstOp</span><span class="hljs-params">(CustomMCInst *I)</span> </span>&#123;<br>  <span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> * IALU = <span class="hljs-built_in">dyn_cast</span>&lt;ALUMCInst&gt;(I)) &#123;<br>    <span class="hljs-keyword">return</span> IALU-&gt;<span class="hljs-built_in">getDstOpernad</span>();<br>  <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> (<span class="hljs-keyword">auto</span> * ILSA = <span class="hljs-built_in">dyn_cast</span>&lt;LSAMCInst&gt;(I)) &#123;<br>    <span class="hljs-keyword">return</span> ILSA-&gt;<span class="hljs-built_in">getOperand</span>();<br>  <span class="hljs-keyword">else</span> <br>    <span class="hljs-keyword">return</span> <span class="hljs-built_in">MCOperand</span>()<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>需要注意，所有非抽象类，都应该实现 classof 接口，即使它不是叶子类型。另外，classof 的参数将始终应该是抽象类类型。</p>
+<p>进一步扩展一下，我们的 classof 函数实现，并不一定要求一定是 <code>return i→getKind() == IK_A_KIND</code>，事实上，任何能够决定类型，且返回 bool 状态的内部实现，都可以用来实现 classof。这些在我们实现更复杂的类继承结构中会考虑用到。</p>
+<h2 id="深层次继承结构"><a href="#深层次继承结构" class="headerlink" title="深层次继承结构"></a>深层次继承结构</h2><p>难度：⭐⭐</p>
+<p>上边提到，当一个非抽象类型，并不是叶子类型（也就是它自身还有子类派生），我们也应该提供 classof 接口。这是因为任何非抽象类型都可以成为在运行时需要动态识别和转换类型的入参。</p>
+<p>对于这种多层的继承结构，有一些额外的规则：</p>
+<ul>
+<li>非抽象类型都要提供 classof 接口</li>
+<li>非叶子类型的 classof 实现，需要将其子类型包含在其中</li>
+</ul>
+<p>举例来说，我们对上边的代码做扩展，将 ALU 指令分为 ARITH 指令和 LOGIC 指令：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">CustomMCInst</span> &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">CustomMCInst</span>() &#123;&#125;<br>  <span class="hljs-built_in">CustomMCInst</span>(InstKind K) : <span class="hljs-built_in">Kind</span>(K) &#123;&#125;<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;<br><br>  <span class="hljs-keyword">enum</span> <span class="hljs-title class_">InstKind</span> &#123;<br>    IK_ALU,<br>    **IK_ARITH,<br>    IK_LOGIC,**<br>    IK_LSA<br>  &#125;;<br>  <span class="hljs-function">InstKind <span class="hljs-title">getKind</span><span class="hljs-params">()</span> <span class="hljs-type">const</span> </span>&#123; <span class="hljs-keyword">return</span> Kind; &#125;<br><span class="hljs-keyword">private</span>:<br>  <span class="hljs-type">const</span> InstKind Kind;<br>&#125;;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : <span class="hljs-keyword">public</span> CustomMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">ALUMCInst</span>() : <span class="hljs-built_in">CustomMCInst</span>(IK_ALU) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    **<span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() &gt;= IK_ALU &amp;&amp; I-&gt;<span class="hljs-built_in">getKind</span>() &lt;= IK_LOGIC;**<br>  &#125;<br>&#125;;<br>**<span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUArithMCInst</span> : <span class="hljs-keyword">public</span> ALUMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">ALUArithMCInst</span>() : <span class="hljs-built_in">ALUMCInst</span>(IK_ARITH) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_ARITH;<br>  &#125;<br>&#125;;<br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALULogicMCInst</span> : <span class="hljs-keyword">public</span> ALUMCInst &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">ALULogicMCInst</span>() : <span class="hljs-built_in">ALUMCInst</span>(IK_LOGIC) &#123;&#125;<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  <span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>    <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_LOGIC;<br>  &#125;<br>&#125;;**<br><br><span class="hljs-comment">// ... 省略 LSAMCInst 代码</span><br></code></pre></td></tr></table></figure>
+
+<p>我们扩展了 <code>ALUMCInst::classof</code>中的实现，使用范围 enum 来将所有是 ALU 类型及其子类型的 InstKind 都考虑进来。然后，我们实现子类型 ALUArithMCInst 和 ALULogicMCInst 如之前。</p>
+<p>这种实现需要留意避免调整 enum 顺序时造成 bug，更常见的做法可能是：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">ALUMCInst::classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>  <span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() == IK_ALU || I-&gt;<span class="hljs-built_in">getKind</span>() == IK_ARITH || I-&gt;<span class="hljs-built_in">getKind</span>() == IK_LOGIC;<br>&#125;<br></code></pre></td></tr></table></figure>
+
+<h2 id="潜在的-Bug"><a href="#潜在的-Bug" class="headerlink" title="潜在的 Bug"></a>潜在的 Bug</h2><p>难度：⭐⭐</p>
+<p>应当仔细做到在这些非叶子类型非抽象类中，classof 总是能囊括所有的子类类型，在整个类继承结构完成之后，应该再次检查 classof 的正确性，以避免潜在 Bug。</p>
+<p>LLVM 文档中提到可以借用假的 enum flag 来标记一类 Kind 的结束为止，从而让 classof 的维护没那么容易引入问题。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">enum</span> <span class="hljs-title class_">CustomMCInst</span>::InstKind &#123;<br>  IK_ALU,<br>  IK_ARITH,<br>  IK_LOGIC,<br>  **IK_ALU_END,**<br>  IK_LSA<br>&#125;;<br><br><span class="hljs-function"><span class="hljs-type">static</span> <span class="hljs-type">bool</span> <span class="hljs-title">ALUMCInst::classof</span><span class="hljs-params">(<span class="hljs-type">const</span> CustomMCInst *I)</span> </span>&#123;<br>  **<span class="hljs-keyword">return</span> I-&gt;<span class="hljs-built_in">getKind</span>() &gt;= IK_ALU &amp;&amp; I-&gt;<span class="hljs-built_in">getKind</span>() &lt;= IK_ALU_END**; <br>&#125;<br></code></pre></td></tr></table></figure>
+
+<p>尾区间选择开区间还是闭区间并不重要，毕竟不会有一个类型是假的 IK_ALU_END，当然为了避免意外使用，选择闭区间的出错概率可能低一些。</p>
+<p>之后，我们如果想继续扩展 ALU 类指令，就只需要在 <code>CustomMCInst::InstKind</code> 中的 IK_ALU 和 IK_ALU_END 之间加入新类型即可，而不需要再次调整 <code>ALUMCInst::classof</code> 的实现。</p>
+<h2 id="开放的类继承结构"><a href="#开放的类继承结构" class="headerlink" title="开放的类继承结构"></a>开放的类继承结构</h2><p>难度：⭐⭐⭐</p>
+<p>前边描述实现 LLVM RTTI 的这套方法，依赖一个大前提，即我们需要在实现整个代码前，已经设计好了完整的类结构。</p>
+<p>但如果因为业务需要，我们无法在设计完成时确定类继承结构，即我们的类结构是开放形式时，应该怎么实现 LLVM RTTI 呢，LLVM 文档中为我们简单介绍了一下它提供的一种新的机制：ExtensibleRTTI。</p>
+<p>开放的继承结构，以本文例子来说，就是我们设计了整套 CustomMCInst 的类结构，但依然需要在将来由其他用户对这个类结构做扩展，而其他用户无法帮我们继续维护之前的 InstKind 和 classof 实现。</p>
+<p>这种新机制和前文的方案完全无关，可以在需要时再进一步了解。</p>
+<p>LLVM 提供了两个类：<code>RTTIRoot</code> 和 <code>RTTIExtends</code>，前者用来实现 RTTI 检查，后者提供了一种机制，使当前类型能够继承自 RTTIRoot，它接受两个模版参数，分别是当前类型和 RTTIRoot。</p>
+<p>所有自定义类型（抽象类和派生类）都需要继承自 RTTIExtends，真正的继承关系由 RTTIExtends 负责建立。并且，所有自定义类型，都需要提供一个名为 <code>ID</code> 的 static char 成员，用来让 RTTIExtends 管理特定类型。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs cpp"><span class="hljs-keyword">class</span> <span class="hljs-title class_">CustomMCInst</span> : **<span class="hljs-keyword">public</span> RTTIExtends&lt;CustomMCInst, RTTIRoot&gt;** &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-built_in">CustomMCInst</span>() &#123;&#125;<br>  <span class="hljs-function"><span class="hljs-keyword">virtual</span> MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> </span>= <span class="hljs-number">0</span>;<br><br>  **<span class="hljs-type">static</span> <span class="hljs-type">char</span> ID;**<br>&#125;;<br><br><span class="hljs-keyword">class</span> <span class="hljs-title class_">ALUMCInst</span> : **<span class="hljs-keyword">public</span> RTTIExtends&lt;ALUMCInst, CustomMCInst&gt;** &#123;<br><span class="hljs-keyword">public</span>:<br>  <span class="hljs-function">MCOperand <span class="hljs-title">getDstOperand</span><span class="hljs-params">()</span> <span class="hljs-keyword">override</span></span>;<br><br>  **<span class="hljs-type">static</span> <span class="hljs-type">char</span> ID;**<br>&#125;;<br><br><span class="hljs-type">char</span> CustomMCInst::ID = <span class="hljs-number">0</span>;<br><span class="hljs-type">char</span> ALUMCInst::ID = <span class="hljs-number">0</span>;<br></code></pre></td></tr></table></figure>
+
+<p>这种实现方案，不再需要手动管理各种 Kind 和 classof，唯一需要的就是将所有类型都设计在 RTTIExtends 之下。</p>
+<p>LLVM 文档提到，这种方案只有在开放结构中用，在其他场景下，还是应该使用之前介绍的标准 LLVM RTTI 方式。</p>
+<h2 id="进阶用法"><a href="#进阶用法" class="headerlink" title="进阶用法"></a>进阶用法</h2><p>难度：⭐⭐⭐</p>
+<p><code>isa/cast/dyn_cast</code> 这些接口的底层实现是 <code>CastInfo</code>，CastInfo 提供了 4 个方法，<code>isPossible</code>，<code>doCast</code>，<code>castFailed</code>，<code>doCastIfPossible</code>。这些方法用来对应实现 isa，cast，dyn_cast。</p>
+<p>我们可以通过自定义 CastInfo 类型，来对这些 RTTI API 做更细致更灵活的定制。CastInfo 继承自 <code>CastIsPossible</code>，后者内部的实现就是我们前边介绍的，利用 classof 来决定类型判断和转换行为。</p>
+<p>早前的实现中没有 CastInfo 这一层，这次写文时才看到 LLVM 更新了文档，介绍了这部分内容，简单看了下实现，但目前还没有用到过，感兴趣小伙伴可以到 <a target="_blank" rel="noopener" href="https://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html#advanced-use-cases">How to set up LLVM-style RTTI for your class hierarchy — LLVM 18.0.0git documentation</a> 了解或者看源码 <code>include/llvm/Support/Casting.h</code> 学习，其中写了很多注释帮助理解。</p>
+<h2 id="外链"><a href="#外链" class="headerlink" title="外链"></a>外链</h2><p>本文同步发布在知乎账号下 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/650022272">LLVM 风格的 RTTI - 知乎 (zhihu.com)</a></p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/" class="category-chain-item">软件开发</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CPP/" class="print-no-link">#CPP</a>
+      
+        <a href="/tags/LLVM/" class="print-no-link">#LLVM</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLVM风格的RTTI</div>
+      <div>http://p2tree.github.io/2023/08/14/LLVM风格的RTTI/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>P2Tree</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>August 14, 2023</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2023/10/14/Vim%20%E9%AB%98%E6%95%88%E7%BC%96%E8%BE%91%E6%8A%80%E5%B7%A7/" title="Vim 高效编辑技巧">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">Vim 高效编辑技巧</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/06/23/%E4%B8%BA%E4%BB%80%E4%B9%88%E7%BB%88%E7%AB%AF%E5%BC%80%E5%8F%91%E7%A6%BB%E4%B8%8D%E5%BC%80Tmux/" title="为什么终端开发离不开 Tmux">
+                        <span class="hidden-mobile">为什么终端开发离不开 Tmux</span>
+                        <span class="visible-mobile">Next</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'p2tree/p2tree.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        Views: 
+        <span id="busuanzi_value_site_pv"></span>
+        
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        Visitors: 
+        <span id="busuanzi_value_site_uv"></span>
+        
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

@@ -204,5 +204,34 @@
   
   
   
+  <entry>
+    <title>CUDA 术语</title>
+    <link href="/2022/08/28/CUDA-%E6%9C%AF%E8%AF%AD/"/>
+    <url>/2022/08/28/CUDA-%E6%9C%AF%E8%AF%AD/</url>
+    
+    <content type="html"><![CDATA[<p>学习 CUDA 最重要的首先是理解 GPU 和 CUDA 中的各种术语，在不同的平台上，相同或类似的概念却有着不同的称呼，典型的就是在 CUDA 和 OpenCL 的系统中叫法之差异，以及和通用体系结构教材中的称呼。GPU 学习曲线陡峭的一个原因就是术语使用上还未完全统一。</p><h2 id="程序抽象类"><a href="#程序抽象类" class="headerlink" title="程序抽象类"></a>程序抽象类</h2><table><thead><tr><th>书中使用的一般性名称</th><th>非 GPU 术语</th><th>NVIDIA 和 CUDA 术语</th><th>AMD 和 OpenCL 术语</th><th>详细描述（其他术语标粗体）</th></tr></thead><tbody><tr><td>可向量化循环</td><td>可向量化循环</td><td>网格（Grid）</td><td>索引范围（NDRange）</td><td>在 GPU 上执行的可向量化循环，由一个或多个可以并行执行的线程块（向量化循环体）组成</td></tr><tr><td>向量化循环体</td><td>（条带挖掘后的）向量化循环体</td><td>线程块（Block）</td><td>工作组（WorkGroup）</td><td>可以在多线程 SIMD 处理器上执行的向量化循环，由一个或多个 SIMD 指令线程构成，可以通过局部存储器通信</td></tr><tr><td>SIMD 车道操作序列</td><td>标量循环的一次迭代</td><td>CUDA 线程（Thread）</td><td>工作项（WorkItem）</td><td>SIMD 指令线程的垂直抽取，对应于一个 SIMD 车道所执行的一个元素。根据遮罩和预测寄存器对结果进行存储</td></tr></tbody></table><p>OpenCL 通常通过 API 函数来得到与任务维度和索引相关的值：</p><ul><li>get_num_groups() ：描述 WorkGroup 的数量，即 Task 的 dimension</li><li>get_local_size() ：描述 WorkItem 的数量，即 WorkGroup 的 dimension</li><li>get_group_id() ：描述 WorkGroup 的索引下标</li><li>get_local_id() ：描述 WorkItem 在当前 WorkGroup 中的索引下标</li><li>get_global_id() ：描述 WorkItem 在 Task 中的索引下标</li></ul><p>CUDA 通常是提供全局的变量来指定与任务维度和索引相关的值：</p><ul><li>grid_dim ：同 OpenCL get_num_groups()</li><li>block_dim ：同 OpenCL get_local_size()</li><li>block_idx ：同 OpenCL get_group_id()</li><li>thread_idx ：同 OpenCL get_local_id()</li><li>CUDA 获取 CUDA 线程相对于 Task 的全局索引，需要手动计算</li></ul><p>NVIDIA 将 CUDA 编程模型定义为 SIMT（单指令多线程），用以与 SIMD 模型做区分。SIMT 优于 SIMD 是因为 SIMT 按线程做分支和控制流的机制与 SIMD 机器不同。</p><h2 id="机器对象"><a href="#机器对象" class="headerlink" title="机器对象"></a>机器对象</h2><table><thead><tr><th>书中使用的一般性名称</th><th>非 CUDA 术语（旧术语）</th><th>NVIDIA 和 CUDA 术语</th><th>AMD 和 OpenCL 术语</th><th>详细描述（其他术语标粗体）</th></tr></thead><tbody><tr><td>SIMD 指令线程</td><td>向量指令线程</td><td>Warp</td><td>波前（wave）</td><td>一种传统线程，但它仅包含在多线程 SIMD 处理器上执行的 SIMD 指令。根据每个元素的遮罩来存储结果</td></tr><tr><td>SIMD 指令</td><td>向量指令</td><td>PTX 指令</td><td>AMDIL&#x2F;FSAIL 指令</td><td>在多个 SIMD 车道上执行的单一 SIMD 指令</td></tr></tbody></table><p>注意区分 SIMD 指令线程（Warp）和 CUDA 线程。</p><ul><li>Warp 是硬件创建、管理、调度和执行的计算单元，它依赖硬件的并行执行单元来执行运算，也就是 CUDA 线程（车道操作序列），每个 Warp 有自己的 PC。</li><li>CUDA 线程只是硬件实现的最小计算单元，以及会暴露给程序抽象的一个概念（用来划分最小的独立计算数据）。</li></ul><p>之所以说是 SIMD 指令，是因为该指令会在同一个 Warp 下的多个 SIMD 车道上执行，其中每一个独立的 SIMD 车道都会处理不同的等量数据单位，满足标准 SIMD 指令的概念。同一个 Warp 下的不同 SIMD 车道一定会执行相同的 SIMD 指令。</p><p>每个 SIMD 指令线程（Warp）映射的 CUDA 线程（车道操作序列）数量依不同硬件配置而异，车道数量不一定等同于 SIMD 指令中的数据量（宽度）。比如在 Fermi 架构中，每个拥有 32 宽度的 SIMD 指令线程映射到 16 个物理 CUDA 线程，所以每个 SIMD 指令需要 2 个 cycle 才能完成计算。</p><h2 id="处理硬件"><a href="#处理硬件" class="headerlink" title="处理硬件"></a>处理硬件</h2><table><thead><tr><th>书中使用的一般性名称</th><th>非 CUDA 术语（旧术语）</th><th>NVIDIA 和 CUDA 术语</th><th>AMD 和 OpenCL 术语</th><th>详细描述（其他术语标粗体）</th></tr></thead><tbody><tr><td>多线程 SIMD 处理器</td><td>（多线程）向量处理器</td><td>流式多处理器 Stream Multi-processor（SM）</td><td>计算单元</td><td>多线程 SIMD 处理器执行 SIMD 指令线程，与其他 SIMD 处理器无关</td></tr><tr><td>线程块调度程序</td><td>标量处理器</td><td>Giga 线程引擎</td><td>超线程分派引擎</td><td>将多个线程块（向量化循环体）指定给多线程 SIMD 处理器</td></tr><tr><td>SIMD 线程调度程序</td><td>多线程 CPU 中的线程调度器</td><td>Warp 调度程序</td><td>工作组调度程序</td><td>当 SIMD 指令线程（Warp）做好执行准备之后，用于调度和发射这些线程的硬件；包括一个计分板，用于跟踪 SIMD 线程执行</td></tr><tr><td>SIMD 车道（lane）</td><td>向量车道</td><td>线程处理器</td><td>处理元素&#x2F;SIMD 车道</td><td>SIMD 车道执行一个 SIMD 指令线程中针对单个元素的操作。根据遮罩存储结果</td></tr></tbody></table><p>多线程 SIMD 处理器可以看作是完整的处理器，也可以说 GPU 是多核的多线程 SIMD 处理器。</p><p>GPU 上存在两种不同的调度：</p><ul><li>线程块调度：将线程块（向量化循环体）分配给多线程 SIMD 处理器；</li><li>SIMD 线程（Warp）调度：由它调度何时、在哪里运行 SIMD 线程；</li></ul><h2 id="存储器硬件"><a href="#存储器硬件" class="headerlink" title="存储器硬件"></a>存储器硬件</h2><table><thead><tr><th>书中使用的一般性名称</th><th>非 CUDA 术语（旧术语）</th><th>NVIDIA 和 CUDA 术语</th><th>AMD 和 OpenCL 术语</th><th>详细描述（其他术语标粗体）</th></tr></thead><tbody><tr><td>GPU 存储器</td><td>主存储器</td><td>全局存储器</td><td>全局存储器</td><td>可供 GPU 中所有多线程 SIMD 处理器访问的 DRAM 存储器</td></tr><tr><td>专用存储器</td><td>栈或线程局部存储（操作系统）</td><td>局部存储器</td><td>专用存储器</td><td>每个 SIMD 车道专用的 DRAM 存储器部分</td></tr><tr><td>局部存储器&#x2F;本地存储器</td><td>局部存储器</td><td>共享存储器</td><td>本地存储器&#x2F;组存储器</td><td>一个多线程 SIMD 处理器的快速本地 SRAM，不可供其他 SIMD 处理器使用</td></tr><tr><td>SIMD 车道寄存器</td><td>向量车道寄存器</td><td>线程处理器寄存器</td><td>寄存器</td><td>跨越完整线程块（向量化循环体）分配的单一 SIMD 车道中的寄存器</td></tr></tbody></table><p>层次结构是 全局存储器（Global，所有 SP 可访问）&gt; 局部共享存储器（Shared，单一 SP 内部使用）&gt; 局部存储器（local，单一 SIMD 车道私有）。</p><p>局部存储器常用来保存单个 SIMD 车道的栈帧、溢出寄存器和不能放到寄存器中的私有变量。为了提高性能，通常 GPU 会设计缓存来辅助加速数据访问和节省能量。</p><p>局部共享存储器通常用来做单个 SIMD 处理器内不同 SIMD 线程之间的数据交互和同步。</p><p>SIMD 车道寄存器是车道内的硬件资源，所以从 SIMD 指令处理器（SP）角度看，会拥有极其大量的寄存器数量（Fermi 架构中拥有 32768 个 32 位的寄存器）。</p>]]></content>
+    
+    
+    <categories>
+      
+      <category>软件开发</category>
+      
+    </categories>
+    
+    
+    <tags>
+      
+      <tag>体系结构</tag>
+      
+      <tag>并发编程</tag>
+      
+      <tag>CUDA</tag>
+      
+    </tags>
+    
+  </entry>
+  
+  
+  
   
 </search>

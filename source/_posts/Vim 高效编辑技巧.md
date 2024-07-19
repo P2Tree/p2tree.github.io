@@ -5,7 +5,7 @@ tags:
   - 软件工具
   - 终端开发
   - 高效编程
-index_img: /img/20231014/index.jpg
+index_img: /img/20231014/index_small.jpg
 banner_img: /img/20231014/index.jpg
 date: 2023-10-14 10:00:00
 categories: 软件工具

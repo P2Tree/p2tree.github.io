@@ -4,7 +4,7 @@ date: 2022-12-03 17:29:47
 tags:
   - LLVM
   - 编译器
-index_img: /img/20221203/index.jpg
+index_img: /img/20221203/index_small.jpg
 banner_img: /img/20221203/index.jpg
 categories: 软件开发
 ---

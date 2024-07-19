@@ -5,7 +5,7 @@ tags:
   - 终端开发
   - Terminal
   - 软件工具
-index_img: /img/20230623/index.jpg
+index_img: /img/20230623/index_small.jpg
 banner_img: /img/20230623/index.jpg
 date: 2023-06-23 10:00:00
 categories: 软件工具

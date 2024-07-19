@@ -5,7 +5,7 @@ tags:
   - 并发编程
   - 体系结构
   - CUDA
-index_img: /img/20220828/index.jpg
+index_img: /img/20220828/index_small.jpg
 banner_img: /img/20220828/index.jpg
 categories: 软件开发
 ---

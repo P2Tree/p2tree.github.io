@@ -5,7 +5,7 @@ tags:
   - CPP
   - LLVM
   - 编译器
-index_img: /img/20230814/index.jpg
+index_img: /img/20230814/index_small.jpg
 banner_img: /img/20230814/index.jpg
 categories: 软件开发
 ---

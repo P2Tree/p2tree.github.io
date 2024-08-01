@@ -1,0 +1,864 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/avatar.jpg">
+  <link rel="icon" href="/img/avatar.jpg">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="P2Tree">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="在这一章，我们会在 Cpu0 后端中增加对子过程&#x2F;函数调用的翻译功能，会添加大量代码。这一章首先会介绍 Mips 的栈帧结构，我们的 Cpu0 也会借用 Mips 的栈帧设计，大多数 RISC 机器的栈帧设计都是类似的，如果你对这块的背景知识有困惑，需要先查阅其他书籍，比如《深入理解计算机系统》这类计算机体系结构的书。 8.1 栈帧结构Cpu0 函数调用的第一件事是设计好如何使用栈帧，比">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LLVM后端实践笔记 8：函数调用">
+<meta property="og:url" content="http://p2tree.github.io/2021/07/24/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-8-%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8/index.html">
+<meta property="og:site_name" content="P2Tree Home">
+<meta property="og:description" content="在这一章，我们会在 Cpu0 后端中增加对子过程&#x2F;函数调用的翻译功能，会添加大量代码。这一章首先会介绍 Mips 的栈帧结构，我们的 Cpu0 也会借用 Mips 的栈帧设计，大多数 RISC 机器的栈帧设计都是类似的，如果你对这块的背景知识有困惑，需要先查阅其他书籍，比如《深入理解计算机系统》这类计算机体系结构的书。 8.1 栈帧结构Cpu0 函数调用的第一件事是设计好如何使用栈帧，比">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://p2tree.github.io/img/20210724/index_small.png">
+<meta property="article:published_time" content="2021-07-24T15:01:27.000Z">
+<meta property="article:modified_time" content="2024-08-01T15:14:19.377Z">
+<meta property="article:author" content="P2Tree">
+<meta property="article:tag" content="CPP">
+<meta property="article:tag" content="LLVM">
+<meta property="article:tag" content="编译器">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="http://p2tree.github.io/img/20210724/index_small.png">
+  
+  
+    <meta name="referrer" content="no-referrer-when-downgrade">
+  
+  
+  <title>LLVM后端实践笔记 8：函数调用 - P2Tree Home</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"p2tree.github.io","root":"/","version":"1.9.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"|","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"❡"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 7.2.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>P2Tree Home</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/" target="_self">
+                <i class="iconfont icon-home-fill"></i>
+                <span>Home</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/" target="_self">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>Archives</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/" target="_self">
+                <i class="iconfont icon-category-fill"></i>
+                <span>Categories</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/" target="_self">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>Tags</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/" target="_self">
+                <i class="iconfont icon-user-fill"></i>
+                <span>About</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/20210724/index.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="LLVM后端实践笔记 8：函数调用"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2021-07-24 23:01" pubdate>
+          July 24, 2021 pm
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          5k words
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          42 mins
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">LLVM后端实践笔记 8：函数调用</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>在这一章，我们会在 Cpu0 后端中增加对子过程&#x2F;函数调用的翻译功能，会添加大量代码。这一章首先会介绍 Mips 的栈帧结构，我们的 Cpu0 也会借用 Mips 的栈帧设计，大多数 RISC 机器的栈帧设计都是类似的，如果你对这块的背景知识有困惑，需要先查阅其他书籍，比如《深入理解计算机系统》这类计算机体系结构的书。</p>
+<h2 id="8-1-栈帧结构"><a href="#8-1-栈帧结构" class="headerlink" title="8.1 栈帧结构"></a>8.1 栈帧结构</h2><p>Cpu0 函数调用的第一件事是设计好如何使用栈帧，比如在调用函数时，如何保存参数。</p>
+<p>具体如下表所示，保存函数参数有两种设计，第一种是将所有参数都保存在栈帧上，第二种是选出一部分寄存器，将部分参数先保存在这些寄存器中，如果参数过多，超出的那些再保存在栈帧上。比如 Mips 设计中，将前 4 个参数保存在寄存器 <code>$a0</code>, <code>$a1</code>, <code>$a2</code>, <code>$a3</code> 中，然后再把多余的其他参数保存在栈帧。</p>
+<table>
+<thead>
+<tr>
+<th>基址寄存器与偏移</th>
+<th>保存内容</th>
+<th>当前栈帧</th>
+</tr>
+</thead>
+<tbody><tr>
+<td></td>
+<td>未定义的其他位置 …</td>
+<td>高地址</td>
+</tr>
+<tr>
+<td>旧 $sp … +15</td>
+<td>输入参数保存（高位参数，共 4 个）</td>
+<td></td>
+</tr>
+<tr>
+<td>旧 $sp … +0</td>
+<td>输入参数保存（低位参数）</td>
+<td>前一个栈帧</td>
+</tr>
+<tr>
+<td></td>
+<td>局部变量和临时变量</td>
+<td>当前栈帧</td>
+</tr>
+<tr>
+<td></td>
+<td>通用寄存器保存</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>浮点寄存器保存</td>
+<td></td>
+</tr>
+<tr>
+<td>新 $sp … +0</td>
+<td>其他位置</td>
+<td>低地址</td>
+</tr>
+</tbody></table>
+<p>保存在寄存器中的参数，和栈帧没有关系。</p>
+<p>栈帧管理部分也需要我们在后端编写代码，我们已经在第二章添加了这些代码，主要实现了 <code>EmitPrologue()</code> 和 <code>EmitEpilogue()</code> 函数，所以这一节我们不需要额外增加新的代码，case 就可以正常工作。</p>
+<p>可以先尝试运行 ch8_1.c 的测试用例，使用 <code>-march=mips</code> 来编译输出汇编代码：</p>
+<p>在 main 函数中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><code class="hljs asm">...<br>addiu $1, $zero, 6<br>sw $1, 20($sp)            # 第六个参数存入栈偏移 20 位置<br>addiu $1, $zero, 5<br>sw $1, 16($sp)            # 第五个参数存入栈偏移 16 位置<br>lw $25, %call16(sum_i)($gp)    # 获得 sum_i 地址<br>addiu $4, $zero, 1        # 第一个参数存入 $4<br>addiu $5, $zero, 2        # 第二个参数存入 $5<br>addiu $6, $zero, 3        # 第三个参数存入 $6<br>jalr $25                  # 跳转到 sum_i<br>addiu $7, $zero, 4        # 延迟一个 cycle，第四个参数存入 $7<br>...<br></code></pre></td></tr></table></figure>
+
+<p>在 sum_i 函数中：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><code class="hljs asm">...<br>lui $2, %hi(_gp_disp)<br>addiu $2, $2, %lo(_gp_disp)<br>addu $1, $2, $25<br>lw $1, %got(gI)($1)      # 前几个指令，获取全局变量 gI 的地址<br>sw $4, 16($fp)           # 第一个参数存入栈<br>sw $5, 12($fp)           # 第二个参数存入栈<br>sw $6, 8($fp)            # 第三个参数存入栈<br>sw $7, 4($fp)            # 第四个参数存入栈<br>lw $1, 0($1)             # 全局变量 gI 的值存入 $1<br>...<br></code></pre></td></tr></table></figure>
+
+<h2 id="8-2-传入参数"><a href="#8-2-传入参数" class="headerlink" title="8.2 传入参数"></a>8.2 传入参数</h2><p>在开始之前，先使用 <code>-march=cpu0</code> 执行 ch8_1.c，检查报错信息：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">Assertion failed: (InVals.size() == Ins.size() &amp;&amp; &quot;LowerFormalArguments didn&#x27;t emit the correct number of values!&quot;), function LowerArguments, file .../SelectionDAGBuilder.cpp<br></code></pre></td></tr></table></figure>
+
+<p>目前，我们 <code>LowerFormalArgument()</code> 函数依然是空的，所以才会得到这个错误，在定义函数内容之前，我们要处理如何传入参数。</p>
+<p>我们决定，设置一个编译参数：<code>-cpu0-s32-calls</code>，默认值为 false，当为 false 时，Cpu0 将前 2 个参数放入寄存器传递，其他更多参数存入栈帧；当为 true 时，Cpu0 将所有参数存入栈帧。</p>
+<h3 id="8-2-1-代码修改"><a href="#8-2-1-代码修改" class="headerlink" title="8.2.1 代码修改"></a>8.2.1 代码修改</h3><h4 id="1-Cpu0ISelLowering-h-cpp"><a href="#1-Cpu0ISelLowering-h-cpp" class="headerlink" title="(1) Cpu0ISelLowering.h&#x2F;.cpp"></a>(1) Cpu0ISelLowering.h&#x2F;.cpp</h4><p>ISelLowering 中实现了几个重要的函数。其中之一就是 <code>LowerFormalArgument()</code>，回顾一下之前全局变量的实现代码，当时实现了 <code>LowerGlobalAddress()</code> 函数，然后在 td 文件中实现指令选择模板，当代码中存在全局变量的访问时，LLVM 就会访问这个函数。<code>LowerFormalArgument()</code> 也是同样的道理，会在函数被调用时被访问。它从 CCInfo 对象中获取输入参数的信息，比如 <code>ArgLocs.size()</code> 就是传入参数的数量，而每个参数的内容就放在 <code>ArgLocs[i]</code> 中，当 <code>VA.isRegLoc()</code> 为 true 时，表示参数放到寄存器中传递，而 <code>VA.isMemLoc()</code> 为 true 时，就表示参数放到栈上传递，在访问参数时，根据这个值，就可以根据实际情况来做处理加载参数的过程。它内部有一个 for 循环，来依次处理每个参数的情况。</p>
+<p>当访问寄存器时，它会先激活寄存器（Live-in），然后拷贝其中的值，当时内存传递参数时，它会创建栈的偏移对象，然后使用 load 节点来加载值。</p>
+<p>编译参数 <code>-cpu0-s32-calls=false</code> 时，它会选择将前两个参数从寄存器中读取，否则，所有参数都从栈中 load 出来。</p>
+<p>在加载参数前，会先调用 <code>analyzeFormalArguments()</code> 函数，在内部使用 <code>fixedArgFn</code> 来返回函数指针 CC_Cpu0O32 或 CC_Cpu0S32，这两个函数分别是处理两种不同的参数加载方式，即前两个参数从寄存器读取还是全部都从栈上加载。<code>ArgFlags.isByVal</code> 用于处理结构体指针的关键信息，在遇到结构体指针时，会返回 true。</p>
+<p>当 <code>-cpu0-s32-calls=false</code> 时，栈帧偏移从 8 开始，这就是为了保证前两个从寄存器传递的参数有可能 spill 的情况，当编译参数为 true 时，栈帧偏移就从 0 开始了。</p>
+<p>传递结构体参数比较特殊，在函数结尾前，有一个和前边一样的 for 循环，再一次遍历所有的参数，并判断如果这个参数存在一个 SRet 标记，就将对应参数的值拷贝到以一个 SRet 寄存器为 base 的栈的偏移中，通过调用 <code>getSRetReturnReg()</code> 获取 SRet 寄存器，通常为 <code>$2</code>。在下一节 <code>LowerCall()</code> 中，如果是一个 struct 传值的返回值，<code>Flags.isByVal</code> 是为 true，就会将结构体的值依次存入栈中。</p>
+<p>在我们的示例中，对于参数全部放在栈帧上加载的情况，<code>LowerFormalArgument()</code> 会被调用 2 次，第一次是在子函数被调用时，第二次是 main 函数被调用时。</p>
+<p>我们还需要一些辅助的函数，比如 <code>loadRegFromStackSlot()</code> 函数，用来将参数从栈帧 load 到寄存器中。</p>
+<p>几个主要函数的实现还有一些细节，需要从代码中学习。</p>
+<h4 id="2-Cpu0SEISelLowering-h-cpp"><a href="#2-Cpu0SEISelLowering-h-cpp" class="headerlink" title="(2) Cpu0SEISelLowering.h&#x2F;.cpp"></a>(2) Cpu0SEISelLowering.h&#x2F;.cpp</h4><p>重写了一个函数 <code>isEligibleForTailCallOptimization()</code>，用于 call 尾调用优化的事情。暂时和这一节关系不大。</p>
+<h3 id="8-2-2-检验成果"><a href="#8-2-2-检验成果" class="headerlink" title="8.2.2 检验成果"></a>8.2.2 检验成果</h3><p>编译 ch8_incoming.c 这个测试用例，这个用例只有传参的代码，而没有函数调用的代码，可以编译出 cpu0 后端的汇编代码。</p>
+<p>通过选择编译参数 <code>-cpu0-s32-calls=false/true</code> 给 llc 来编译两种不同的汇编，查看差别。</p>
+<p>编译 ch8_1.c 这个测试用例，会发现之前的错误解决了，取而代之的是另一个错误：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">Assertion failed: ((CLI.IsTailCall || InVals.size() == CLI.Ins.size()) &amp;&amp; &quot;LowerCall didn&#x27;t emit the correct number of values!&quot;), function LowerCallTo, fill .../SelectionDAGBuilder.cpp<br></code></pre></td></tr></table></figure>
+
+<p>这个问题我们在下一节解决。</p>
+<h2 id="8-3-函数返回"><a href="#8-3-函数返回" class="headerlink" title="8.3 函数返回"></a>8.3 函数返回</h2><p>上一节我们介绍了如何实现在被调用函数内部将参数传递到被调用函数，实现了 <code>LowerFormalArguments()</code> 函数；现在，我们来实现另一部分，即如何在函数调用时将实参传入栈，以及如何将函数执行结束后的返回值传递回调用函数，<code>LowerCall()</code> 函数用来实现这个功能。</p>
+<h3 id="8-3-1-文件修改"><a href="#8-3-1-文件修改" class="headerlink" title="8.3.1 文件修改"></a>8.3.1 文件修改</h3><h4 id="1-Cpu0ISelLowering-h-cpp-1"><a href="#1-Cpu0ISelLowering-h-cpp-1" class="headerlink" title="(1) Cpu0ISelLowering.h&#x2F;.cpp"></a>(1) Cpu0ISelLowering.h&#x2F;.cpp</h4><p>这个文件中会新增大量的代码，核心函数就是 <code>LowerCall()</code>，和 <code>LowerFormalArgument()</code> 一样，我们为了避免函数过长，将一部分功能提取出来单独实现，让代码更清晰。</p>
+<p>在 <code>LowerCall()</code> 函数中，前边先调用了 <code>analyzeCallOperands()</code> 函数，分析 call 操作的操作数，为之后分配地址空间做准备。</p>
+<p>然后会调用尾调用优化函数 <code>isEligibleForTailCallOptimization()</code>，这里做这样的优化，可以避免尾递归情况下函数频繁开栈空间的问题。通常支持递归的栈式处理器程序都需要对尾调用做额外处理。</p>
+<p>之后，插入 <code>CALLSEQ_START</code> 节点，标记进入 call 的输出过程。</p>
+<p>内部使用一个大循环，对所有参数做遍历，将需要通过寄存器传递的参数 push_back 到 <code>RegsToPass</code> 中，调用了 <code>passByValArg()</code> 函数生成存入寄存器的行为节点链。并在参数大小不满足调用约定的参数做 promote。然后对于通过栈传递的参数，将其加入到 <code>MemOpChains</code> 中，调用了 <code>passArgOnStack()</code> 函数来生成存入栈的行为节点链。</p>
+<p>可以展开来看 <code>passByValArg()</code> 函数和 <code>passArgOnStack()</code> 函数的内部实现。</p>
+<p>如果被调用函数是一个外部函数，包括全局函数（基本都满足这种情况），需要生成一个外部符号加载，这里需要创建一个 <code>TargetGlobalAddress</code> 或 <code>TargetExternalSymbol</code> 节点，从而避免合法化阶段去操作它。其他部分的代码会将这里的节点转换成 load 外部符号的指令并发射。</p>
+<p>之后将所有 call 节点参数（所有节点参数，包括实参、返回值、chain 等）使用 <code>getOpndList()</code>汇总起来做处理，在这个函数中，针对不同的参数类型和属性，分别创建不同的操作方式，比如对于需要通过寄存器传递的实参，创建一系列的 copy to reg 操作。最后把所有操作都打包到 <code>Ops</code> 中返回。</p>
+<p>如果是 PIC 模式，编译器会生成一条 load 重定位的 call 符号的地址 + 一条 jarl；如果不是，则会生成 jsub + 符号地址；PIC 模式会留给链接器之后再去重定位。</p>
+<p>最后，生成一条跳转节点 <code>Cpu0ISD::JmpLink</code>，跳转到被调用函数的符号地址，<code>Ops</code> 作为 call 节点参数被引入。对于尾调用，需要额外生成 <code>Cpu0ISD::TailCall</code> 节点。</p>
+<p>插入 <code>CALLSEQ_END</code> 节点，标记结束 call 动作。</p>
+<p>最后会调用 <code>LowerCallResult()</code> 函数处理调用结束返回时的动作。其中调用了 <code>analyzeCallResult</code> 分析返回 call 的参数，并处理所有返回参数，还原 caller saved register。</p>
+<p>需要提及的是，我们在 Cpu0CallConv.td 中定义的 caller register 和 callee register 会在这里参与指导流程，我们通过调用 <code>Cpu0CCInfo</code> 对象来访问这些配置化的属性。</p>
+<p>定义了一个统计参数 NumTailCalls，用来计数 case 中尾调用的数量。</p>
+<h4 id="2-Cpu0FrameLowering-h-cpp"><a href="#2-Cpu0FrameLowering-h-cpp" class="headerlink" title="(2) Cpu0FrameLowering.h&#x2F;cpp"></a>(2) Cpu0FrameLowering.h&#x2F;cpp</h4><p>这里实现了一个消除 call frame 伪指令 <code>.cpload</code> 和 <code>.cprestore</code> 的函数 <code>eliminateCallFramePseudoInstr()</code>，因为没有额外的事情要做，所以这里就直接 <code>MBB.erase(I)</code> 就可以了。</p>
+<h4 id="3-Cpu0InstrInfo-td"><a href="#3-Cpu0InstrInfo-td" class="headerlink" title="(3) Cpu0InstrInfo.td"></a>(3) Cpu0InstrInfo.td</h4><p>加入了一条链接并跳转指令 <code>jalr</code> 和 <code>jsub</code>，两者的差别是前者是将跳转地址保存到寄存器，后者是直接通过 label 传递。</p>
+<h4 id="4-Cpu0InstrInfo-cpp"><a href="#4-Cpu0InstrInfo-cpp" class="headerlink" title="(4) Cpu0InstrInfo.cpp"></a>(4) Cpu0InstrInfo.cpp</h4><p>将伪指令 <code>ADJCALLSTACKDOWN</code>， <code>ADJCALLSTACKUP</code> 注册到 Cpu0GenInstrInfo 对象中。</p>
+<h4 id="5-Cpu0MCInstLowering-h-cpp"><a href="#5-Cpu0MCInstLowering-h-cpp" class="headerlink" title="(5) Cpu0MCInstLowering.h&#x2F;cpp"></a>(5) Cpu0MCInstLowering.h&#x2F;cpp</h4><p>这里定义了编译器输出的 call 的符号类型，新增了 <code>Cpu0MCExpr::CEK_GOT_CALL</code>。还增加了外部符号 <code>MO_ExternalSymbol</code> 的计算方式，全局符号 <code>MO_GlobalSymbol</code> 的代码已经在之前章节添加。</p>
+<h4 id="6-Cpu0MachineFunctionInfo-h-cpp"><a href="#6-Cpu0MachineFunctionInfo-h-cpp" class="headerlink" title="(6) Cpu0MachineFunctionInfo.h&#x2F;cpp"></a>(6) Cpu0MachineFunctionInfo.h&#x2F;cpp</h4><p>新增了一些辅助函数和属性，这些函数和属性是继承自 TargetMachineFunction，我们希望在其他代码中调用到这些属性来辅助生成正确的代码。</p>
+<h4 id="7-Cpu0SEFrameLowering-h-cpp"><a href="#7-Cpu0SEFrameLowering-h-cpp" class="headerlink" title="(7) Cpu0SEFrameLowering.h&#x2F;cpp"></a>(7) Cpu0SEFrameLowering.h&#x2F;cpp</h4><p>实现了一个函数 <code>spillCalleeSavedRegisters()</code>，用来定义 callee saved register 的 spill 动作，里边比较简单，就是遍历所有 callee saved register 并调用 <code>storeRegToStackSlot()</code> 函数将他们存入栈。需要注意 <code>$lr</code> 寄存器如果保存了返回地址，则不需要 spill。</p>
+<h4 id="8-MCTargetDesc-Cpu0AsmBackend-cpp"><a href="#8-MCTargetDesc-Cpu0AsmBackend-cpp" class="headerlink" title="(8) MCTargetDesc&#x2F;Cpu0AsmBackend.cpp"></a>(8) MCTargetDesc&#x2F;Cpu0AsmBackend.cpp</h4><p>新建一个重定位类型 <code>fixup_Cpu0_CALL16</code>。</p>
+<h4 id="9-MCTargetDesc-Cpu0ELFObjectWriter-cpp"><a href="#9-MCTargetDesc-Cpu0ELFObjectWriter-cpp" class="headerlink" title="(9) MCTargetDesc&#x2F;Cpu0ELFObjectWriter.cpp"></a>(9) MCTargetDesc&#x2F;Cpu0ELFObjectWriter.cpp</h4><p>新建重定位类型的 Type，<code>ELF::R_CPU0_CALL16</code>。</p>
+<h4 id="10-MCTargetDesc-Cpu0FixupKinds-h"><a href="#10-MCTargetDesc-Cpu0FixupKinds-h" class="headerlink" title="(10) MCTargetDesc&#x2F;Cpu0FixupKinds.h"></a>(10) MCTargetDesc&#x2F;Cpu0FixupKinds.h</h4><p>还是这个重定位类型的声明。</p>
+<h4 id="11-MCTargetDesc-Cpu0MCCodeEmitter-cpp"><a href="#11-MCTargetDesc-Cpu0MCCodeEmitter-cpp" class="headerlink" title="(11) MCTargetDesc&#x2F;Cpu0MCCodeEmitter.cpp"></a>(11) MCTargetDesc&#x2F;Cpu0MCCodeEmitter.cpp</h4><p>修改 <code>getJumpTargetOpValue()</code>，对于 JSUB 指令，也发射重定位信息。</p>
+<h3 id="8-3-2-检验成果"><a href="#8-3-2-检验成果" class="headerlink" title="8.3.2 检验成果"></a>8.3.2 检验成果</h3><h4 id="1-测试普通参数"><a href="#1-测试普通参数" class="headerlink" title="(1) 测试普通参数"></a>(1) 测试普通参数</h4><p>编译我们上一节未通过的 case ch8_1.c，这次就可以完全编译通过了，使用编译参数 <code>-cpu0-s32-calls=true</code> 和 <code>false</code>， 分别查看两者的区别，前者会将所有参数通过栈来传递，后者会将前两个参数通过寄存器传递，其他参数通过栈传递。</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">build/bin/llc -march=cpu0 -mcpu=cpu032I -cpu0-s32-calls=true -relocation-model=pic -filetype=asm ch8_1.c -o -<br></code></pre></td></tr></table></figure>
+
+<p>生成的汇编部分代码如：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><code class="hljs asm">sum_i:<br>   ...<br>   addiu $sp, $sp, -8<br>   lui $2, %got_hi(gI)<br>   addu $2, $2, $gp<br>   ld $2, %got_lo(gI)($2)    # 加载全局变量<br>   ld $2, 0($2)<br>   ld $3, 8($sp)      # 第一个参数<br>   addu $2, $2, $3<br>   ...<br>   ld $3, 28($sp)     # 最后一个参数<br>   addu $2, $2, $3    <br>   st $2, 4($sp)<br>   ld $2, 4($sp)      # 计算结果存入 $2<br>   addiu $sp, $sp, 8<br>   ret $lr            # 返回 main<br>main:<br>   ...<br>   addiu $sp, $sp, -40<br>   st $lr, 36($sp)     # 是调用 main 的返回地址<br>   addiu $2, $zero, 0<br>   st $2, 32($sp)<br>   addiu $2, $zero, 6<br>   st $2, 20($sp)<br>   ...<br>   addiu $2, $zero, 1<br>   st $2, 0($sp)        # 保存这 6 个实参到栈<br>   ld $6, %call16(sum_i)($gp)<br>   jalr $6              # 这条指令会更新 $lr 并跳转到 $6 地址处<br>   nop<br>   st $2, 28($sp)       # 从 $2 中取出 sum_i 的计算结果，存入 main 的栈<br>   ld $2, 28($sp)       # 再次取出计算结果存入 $2，因为 main 也是将计算结果直接返回<br>   ld $lr, 36($sp)<br>   addiu $sp, $sp, 40<br>   ...<br></code></pre></td></tr></table></figure>
+
+<p>使用 <code>-cpu0-s32-calls=false</code> 的结果也是类似的，不再展示。</p>
+<p>第二个要测试的参数是 <code>-relocation-model=static</code>，因为我们对于 PIC 模式和静态模式处理全局符号&#x2F;外部符号的方式是不一样的。如果我们以静态模式编译：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">build/bin/llc -march=cpu0 -mcpu=cpu032I -cpu0-s32-calls=true -relocation-model=static -filetype=asm ch8_1.c -o -<br></code></pre></td></tr></table></figure>
+
+<p>得到的汇编是：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs asm">main:<br>   ...         # 我把参数传递都省略了<br>   jsub sum_i  # 这是函数调用的跳转<br>   nop<br>   ...<br></code></pre></td></tr></table></figure>
+
+<p>除了使用 <code>jsub</code> 代替了 <code>ld + jalr</code>，其他都是类似的。</p>
+<h4 id="2-测试结构体参数"><a href="#2-测试结构体参数" class="headerlink" title="(2) 测试结构体参数"></a>(2) 测试结构体参数</h4><p>执行 ch8_struct.c，运行一个结构体作为参数的测试用例，其中分别将结构体作为值来传递和作为指针来传递。当作为值传递时，可以留意检查一下在被调用函数中是否生成了 SRet 寄存器和保存结构体内容的 st 动作，如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><code class="hljs asm">test_func_arg_struct:<br>    ...<br>    addiu $2, $sp, 88 # 调用函数中先设定 SRet<br>    st $2, 0($sp)     <br>    ld $2, %got(copyDateByVal)($gp)<br>    ori $6, $2, %lo(copyDateByVal)<br>    jalr $6<br>    nop<br>    ...<br>getDateByVal:<br>    ...<br>    ld $3, 0($sp)    # 加载 SRet 参数到 $3<br>    ld $4, 20($2)    # 加载其他传值结构体内容<br>    st $4, 20($3)    # 存到 $3 作为栈 base 指定的地址<br>    ...              # 省略其他结构体项<br>    ret $lr<br>    nop<br>    ...<br>getDateByAddr:<br>    ...<br>    ld $2, 0($sp)<br>    ret $lr          # 传指针的方式就非常简单了<br>    nop<br></code></pre></td></tr></table></figure>
+
+<h4 id="3-测试字符串"><a href="#3-测试字符串" class="headerlink" title="(3) 测试字符串"></a>(3) 测试字符串</h4><p>另外我们还可以测试一下字符串初始化代码，因为一般情况下，LLVM 会为字符串初始化生成一条 memcpy 动作，在执行时需要配合 C 库中的 memcpy 完成初始化。不过 LLVM 为我们提供了一条优化，可以在字符串比较短时，使用 <code>ld+st</code> 来替代 call 一个 memcpy。</p>
+<h4 id="4-测试浮点运算"><a href="#4-测试浮点运算" class="headerlink" title="(4) 测试浮点运算"></a>(4) 测试浮点运算</h4><p>在第 6 章中，我们在实现浮点类型支持时，因为 Cpu0 没有浮点运算单元，所以浮点类型和运算必须通过调用软件函数库的方式实现，当时还没有实现函数调用，所以无法生成正确的代码。所以现在，我们来测试一下。</p>
+<p>运行 ch6_4_float.c 测试用例，会生成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs asm">jsub __adddf3    # double 类型浮点加法<br>jsub __fixdfsi   # double 类型浮点转 int<br>jsub __addsf3    # float 类型浮点加法<br>jsub __fixsfsi   # float 类型浮点转 int<br></code></pre></td></tr></table></figure>
+
+<p>之类的指令。</p>
+<p>我们现在还没有支持函数库，所以这里没有办法进一步做链接。</p>
+<p>注：在工程中我上传 Chapter 8 代码时，忘记加上 (4) 和下边 (5) 的测试用例，之后额外 patch 补充了。</p>
+<h4 id="5-测试-builtin-函数"><a href="#5-测试-builtin-函数" class="headerlink" title="(5) 测试 builtin 函数"></a>(5) 测试 builtin 函数</h4><p>在第 6 章中，同样的原因，我们还没有测试 builtin 函数的支持情况，当时我们设计了两条指令，分别是计算前导 0 和计算前导 1 的数量，需要在 C 语言端调用 builtin 函数实现。</p>
+<p>运行 ch6_7_clz.c 测试用例，汇编代码中会生成：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs asm">clz $2, $2<br>clo $2, $2<br></code></pre></td></tr></table></figure>
+
+<p>留意看一下 count leading zero 的 C 代码，是对变量先取反后调用 __builtin_clz() 函数。</p>
+<h2 id="8-4-函数调用优化"><a href="#8-4-函数调用优化" class="headerlink" title="8.4 函数调用优化"></a>8.4 函数调用优化</h2><p>这一节我们简单涉及尾调用优化和循环展开递归调用。</p>
+<h3 id="8-4-1-尾调用优化"><a href="#8-4-1-尾调用优化" class="headerlink" title="8.4.1 尾调用优化"></a>8.4.1 尾调用优化</h3><p>当调用函数在返回时的最后一刻调用了一个被调用函数，因为被调用函数和调用函数可以共享一块栈帧空间，避免开辟新的栈帧，从而能节省时间和空间成本，达到优化的目的，尤其是当在递归调用中，使用尾调用优化，可以一定程度上避免了栈溢出问题。</p>
+<p>我们在前边小节中的代码已经加入了一些尾调用的代码，这里再简单说下。</p>
+<p>在 <code>LowerCall()</code> 函数中，检查是否可以进行尾调用优化。这个状态是 Clang 给出的，Clang 在前端就可以分析是否满足尾调用特征，并在开优化的情况下生成 tail call 的 IR。如果是尾调用优化，就不必再发射 <code>callseq_start</code> 到 <code>callseq_end</code> 的这段代码了。取而代之的是在指令选择时选择到伪代码 <code>TAILCALL</code>，并在指令发射时展开成 <code>JMP</code> 指令。</p>
+<p>新增代码到 Cpu0AsmPrinter.cpp 中，在 <code>EmitInstruction()</code> 中的指令循环时，插入如果满足 <code>emitPseudoExpansionLowering()</code> 时做调用，后者是由 tablegen 自动生成的一个函数，在 Cpu0GenMCPseudoLowering.inc 文件中定义。</p>
+<p>尾调用优化是 Clang 支持的一种优化，需要使能至少 O1 优化级别。</p>
+<h3 id="8-4-2-循环展开递归调用"><a href="#8-4-2-循环展开递归调用" class="headerlink" title="8.4.2 循环展开递归调用"></a>8.4.2 循环展开递归调用</h3><p>我们知道，递归调用层次太深，即使使用了尾调用优化，但依然需要频繁的访问栈。使用循环来替代递归是一种不错的解决问题的方式，Clang 支持这种优化，会分析在尾调用满足循环替代递归的特性时做变换。</p>
+<p>不需要添加代码。</p>
+<h3 id="8-4-3-检验成果"><a href="#8-4-3-检验成果" class="headerlink" title="8.4.3 检验成果"></a>8.4.3 检验成果</h3><p>执行 ch8_tailcall.c 文件，这是一个尾调用和递归函数的示例代码。</p>
+<p>先使用 Clang O1 级别编译：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">build/bin/clang -target mips-unknown-linux-gnu -c ch8_tailcall.c -emit-llvm -S -o ch8_tailcall.ll -O1<br>build/bin/llc -march=cpu0 -mcpu=cpu032I -relocation-model=static -filetype=asm -enable-cpu0-tail-calls -stats ch8_tailcall.ll -o -<br></code></pre></td></tr></table></figure>
+
+<p>触发尾调用优化后，会生成 jmp 指令来调用被调用函数，jmp 指令只会跳转，而不会生成 jsub 指令。jmp 跳转到被调用函数后，被调用函数采用循环展开替代递归调用，并在递归结束后，直接返回到调用函数的 <code>$lr</code>，也就是直接返回调用函数应该返回的地方</p>
+<p>因为我们还设置了一个统计参数，所以还可以查看打印的统计数据，可以看到尾调用优化完成 1 次。</p>
+<p>使用 Clang O3 级别编译：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs text">build/bin/clang -target mips-unknown-linux-gnu -c ch8_tailcall.c -emit-llvm -S -o ch8_tailcall.ll -O3<br>build/bin/llc -march=cpu0 -mcpu=cpu032I -relocation-model=static -filetype=asm -enable-cpu0-tail-calls -stats ch8_tailcall.ll -o -<br></code></pre></td></tr></table></figure>
+
+<p>依然触发了一样的优化，但更激进的，调用函数不再需要跳转到被调用函数的代码，而是直接将被调用函数的逻辑搬到调用函数中直接循环执行。</p>
+<h2 id="8-5-总结"><a href="#8-5-总结" class="headerlink" title="8.5 总结"></a>8.5 总结</h2><p>到目前为止，Cpu0 后端代码已经可以处理整形的函数调用和控制条件了。它已经能够编译简单的 C 程序代码了（实际上 C++ 代码中非 C++ 特性的代码也一样能够支持，毕竟这是 Clang 前端在做的事情）。LLVM 对编译技术的完美实践，使得我们能够在它的基础上灵活轻松的支持任何形式的机器架构。三段式的编译结构，可以让后端伴随着前端支持不同编程语言的同时，得到自由的发展。</p>
+<p>下一章，我们要实现输出 ELF 文件的功能支持，虽然我们的 Cpu0 后端没有实际的硬件，只能通过模拟器运行，但假设这是一个实际的硬件后端，只有能够输出标准的可执行二进制文件，才能在真正的机器上运行，所以这部分功能依然是后端不可缺少的一部分。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+    <div class="post-meta mr-3 d-flex align-items-center">
+      <i class="iconfont icon-category"></i>
+      
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/" class="category-chain-item">软件开发</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+    </div>
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/CPP/" class="print-no-link">#CPP</a>
+      
+        <a href="/tags/LLVM/" class="print-no-link">#LLVM</a>
+      
+        <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" class="print-no-link">#编译器</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>LLVM后端实践笔记 8：函数调用</div>
+      <div>http://p2tree.github.io/2021/07/24/LLVM后端实践笔记-8-函数调用/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>Author</div>
+          <div>P2Tree</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>Posted on</div>
+          <div>July 24, 2021</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>Licensed under</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/2021/07/31/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-9-ELF%E6%96%87%E4%BB%B6%E6%94%AF%E6%8C%81/" title="LLVM后端实践笔记 9：ELF文件支持">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">LLVM后端实践笔记 9：ELF文件支持</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+  
+  
+    <article id="comments" lazyload>
+      
+  <script type="text/javascript">
+    Fluid.utils.loadComments('#comments', function() {
+      var light = 'github-light';
+      var dark = 'github-dark';
+      var schema = document.documentElement.getAttribute('data-user-color-scheme');
+      if (schema === 'dark') {
+        schema = dark;
+      } else {
+        schema = light;
+      }
+      window.UtterancesThemeLight = light;
+      window.UtterancesThemeDark = dark;
+      var s = document.createElement('script');
+      s.setAttribute('src', 'https://utteranc.es/client.js');
+      s.setAttribute('repo', 'p2tree/p2tree.github.io');
+      s.setAttribute('issue-term', 'pathname');
+      
+      s.setAttribute('label', 'utterances');
+      
+      s.setAttribute('theme', schema);
+      s.setAttribute('crossorigin', 'anonymous');
+      document.getElementById('comments').appendChild(s);
+    })
+  </script>
+  <noscript>Please enable JavaScript to view the comments</noscript>
+
+
+    </article>
+  
+
+
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>Table of Contents</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+    <div class="statistics">
+  
+  
+
+  
+    
+      <span id="busuanzi_container_site_pv" style="display: none">
+        Views: 
+        <span id="busuanzi_value_site_pv"></span>
+        
+      </span>
+    
+    
+      <span id="busuanzi_container_site_uv" style="display: none">
+        Visitors: 
+        <span id="busuanzi_value_site_uv"></span>
+        
+      </span>
+    
+    
+  
+</div>
+
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  <script  src="/js/local-search.js" ></script>
+
+  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
+  </noscript>
+</body>
+</html>

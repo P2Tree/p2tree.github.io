@@ -78,7 +78,8 @@
 
 
   
-<meta name="generator" content="Hexo 7.2.0"></head>
+<meta name="generator" content="Hexo 7.2.0"><link rel="alternate" href="/atom.xml" title="P2Tree Home" type="application/atom+xml">
+</head>
 
 
 <body>
@@ -284,8 +285,6 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/CPP/">#CPP</a>
-            
               <a href="/tags/LLVM/">#LLVM</a>
             
               <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/">#编译器</a>
@@ -301,7 +300,7 @@
     
       <div class="col-12 col-md-4 m-auto index-img">
         <a href="/2021/07/31/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-9-ELF%E6%96%87%E4%BB%B6%E6%94%AF%E6%8C%81/" target="_self">
-          <img src="/img/20210731/index_small.png" srcset="/img/loading.gif" lazyload alt="LLVM后端实践笔记 9：ELF文件支持">
+          <img src="/img/20210731/index_small.png" srcset="/img/loading.gif" lazyload alt="LLVM 后端实践笔记 9：ELF文件支持">
         </a>
       </div>
     
@@ -309,7 +308,7 @@
       <h2 class="index-header">
         
         <a href="/2021/07/31/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-9-ELF%E6%96%87%E4%BB%B6%E6%94%AF%E6%8C%81/" target="_self">
-          LLVM后端实践笔记 9：ELF文件支持
+          LLVM 后端实践笔记 9：ELF文件支持
         </a>
       </h2>
 
@@ -355,8 +354,6 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/CPP/">#CPP</a>
-            
               <a href="/tags/LLVM/">#LLVM</a>
             
               <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/">#编译器</a>
@@ -372,7 +369,7 @@
     
       <div class="col-12 col-md-4 m-auto index-img">
         <a href="/2021/07/24/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-8-%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8/" target="_self">
-          <img src="/img/20210724/index_small.png" srcset="/img/loading.gif" lazyload alt="LLVM后端实践笔记 8：函数调用">
+          <img src="/img/20210724/index_small.png" srcset="/img/loading.gif" lazyload alt="LLVM 后端实践笔记 8：函数调用">
         </a>
       </div>
     
@@ -380,7 +377,7 @@
       <h2 class="index-header">
         
         <a href="/2021/07/24/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-8-%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8/" target="_self">
-          LLVM后端实践笔记 8：函数调用
+          LLVM 后端实践笔记 8：函数调用
         </a>
       </h2>
 
@@ -426,7 +423,74 @@
           <div class="post-meta">
             <i class="iconfont icon-tags"></i>
             
-              <a href="/tags/CPP/">#CPP</a>
+              <a href="/tags/LLVM/">#LLVM</a>
+            
+              <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/">#编译器</a>
+            
+          </div>
+        
+      </div>
+    </article>
+  </div>
+
+  <div class="row mx-auto index-card">
+    
+    
+      <div class="col-12 col-md-4 m-auto index-img">
+        <a href="/2021/07/04/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-7-%E6%8E%A7%E5%88%B6%E6%B5%81/" target="_self">
+          <img src="/img/20210704/index_small.png" srcset="/img/loading.gif" lazyload alt="LLVM 后端实践笔记 7：控制流">
+        </a>
+      </div>
+    
+    <article class="col-12 col-md-8 mx-auto index-info">
+      <h2 class="index-header">
+        
+        <a href="/2021/07/04/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-7-%E6%8E%A7%E5%88%B6%E6%B5%81/" target="_self">
+          LLVM 后端实践笔记 7：控制流
+        </a>
+      </h2>
+
+      
+      <a class="index-excerpt " href="/2021/07/04/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-7-%E6%8E%A7%E5%88%B6%E6%B5%81/" target="_self">
+        <div>
+          这一章会介绍与控制流有关的功能实现，比如 if、else、while 和 for 等，还会介绍如何将控制流的 IR 表示转换为机器指令；之后会引入几个后端优化，处理一些跳转需求引入的问题，同时来说明如何编写后端优化的 pass。在条件指令小节中，会介绍 LLVM IR 中的特殊指令 select 和 select_cc，以及如何处理这种指令，从而来支持更细节的控制流支持实现。 7.1 控制流语句7
+        </div>
+      </a>
+
+      <div class="index-btm post-metas">
+        
+          <div class="post-meta mr-3">
+            <i class="iconfont icon-date"></i>
+            <time datetime="2021-07-04 22:09" pubdate>
+              2021-07-04
+            </time>
+          </div>
+        
+        
+          <div class="post-meta mr-3 d-flex align-items-center">
+            <i class="iconfont icon-category"></i>
+            
+
+<span class="category-chains">
+  
+  
+    
+      <span class="category-chain">
+        
+  <a href="/categories/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/" class="category-chain-item">软件开发</a>
+  
+  
+
+      </span>
+    
+  
+</span>
+
+          </div>
+        
+        
+          <div class="post-meta">
+            <i class="iconfont icon-tags"></i>
             
               <a href="/tags/LLVM/">#LLVM</a>
             

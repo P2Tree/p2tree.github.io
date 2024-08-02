@@ -30,7 +30,7 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://p2tree.github.io/img/20221203/index_small.jpg">
 <meta property="article:published_time" content="2022-12-03T09:29:47.000Z">
-<meta property="article:modified_time" content="2024-07-19T15:30:38.856Z">
+<meta property="article:modified_time" content="2024-08-01T15:38:33.019Z">
 <meta property="article:author" content="P2Tree">
 <meta property="article:tag" content="LLVM">
 <meta property="article:tag" content="编译器">
@@ -92,7 +92,8 @@
 
 
   
-<meta name="generator" content="Hexo 7.2.0"></head>
+<meta name="generator" content="Hexo 7.2.0"><link rel="alternate" href="/atom.xml" title="P2Tree Home" type="application/atom+xml">
+</head>
 
 
 <body>
@@ -332,7 +333,10 @@
 <p>除了面向用户的提升外，通过标准化使用其中一个 pass manager 改进代码，它也能帮助 LLVM 代码更健壮。虽然我们不能立即移除 legacy pass manager，但已经不建议使用它，尤其是在优化 pipeline 中。然后将来，我们也可能会移除一些和 legacy pass manager 相关的优化 pipeline。</p>
 <h2 id="下一步计划"><a href="#下一步计划" class="headerlink" title="下一步计划"></a>下一步计划</h2><p>开始着手移除使用 legacy pass manager 的优化 pipeline，我们先要确保在 new pass manager 中都能有配套的替代。目前已知的模块：bugpoint，LLVM C API，GPU divergency analysis。</p>
 <p>前边提到，后端 codegen pipeline 仍然工作在 legacy pass manager。虽然已经有一些后端切换到了 new pass manager，但离实用仍然有一段距离。这是改善 LLVM 代码很好的切入点，感兴趣可以与 llvm-dev 沟通。</p>
-
+<hr>
+<div class="note note-info">
+            <p>本文同步发布在知乎账号下：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/588822158">LLVM New Pass Manager - 知乎 (zhihu.com)</a></p>
+          </div>
                 
               </div>
             

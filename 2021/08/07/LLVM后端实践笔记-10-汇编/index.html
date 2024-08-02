@@ -30,9 +30,8 @@
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://p2tree.github.io/img/20210807/index_small.jpg">
 <meta property="article:published_time" content="2021-08-07T15:15:39.000Z">
-<meta property="article:modified_time" content="2024-07-21T15:23:29.783Z">
+<meta property="article:modified_time" content="2024-08-02T14:10:28.032Z">
 <meta property="article:author" content="P2Tree">
-<meta property="article:tag" content="CPP">
 <meta property="article:tag" content="LLVM">
 <meta property="article:tag" content="编译器">
 <meta name="twitter:card" content="summary_large_image">
@@ -93,7 +92,8 @@
 
 
   
-<meta name="generator" content="Hexo 7.2.0"></head>
+<meta name="generator" content="Hexo 7.2.0"><link rel="alternate" href="/atom.xml" title="P2Tree Home" type="application/atom+xml">
+</head>
 
 
 <body>
@@ -231,7 +231,7 @@
       <span class="post-meta mr-2">
         <i class="iconfont icon-chart"></i>
         
-          4.1k words
+          4.2k words
         
       </span>
     
@@ -360,7 +360,10 @@
 <figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">build/bin/llc -march=cpu0 -mcpu=cpu032I -relocation-model=pic -filetype=asm ch10_2.ll -o -<br></code></pre></td></tr></table></figure>
 
 <p>检查汇编文件中，使用 <code>#APP</code> 和 <code>#NO_APP</code> 包含在中间的代码就是内联汇编代码。内联汇编默认的标识是 <code>#APP</code>，这个符号也可以修改。</p>
-
+<hr>
+<div class="note note-info">
+            <p>本文同步发布在知乎账号下：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/397262087">LLVM 后端实践笔记 10：汇编 - 知乎 (zhihu.com)</a></p>
+          </div>
                 
               </div>
             
@@ -392,8 +395,6 @@
   
     <div class="post-meta">
       <i class="iconfont icon-tags"></i>
-      
-        <a href="/tags/CPP/" class="print-no-link">#CPP</a>
       
         <a href="/tags/LLVM/" class="print-no-link">#LLVM</a>
       
@@ -464,8 +465,8 @@
                   <article class="post-next col-6">
                     
                     
-                      <a href="/2021/07/31/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-9-ELF%E6%96%87%E4%BB%B6%E6%94%AF%E6%8C%81/" title="LLVM后端实践笔记 9：ELF文件支持">
-                        <span class="hidden-mobile">LLVM后端实践笔记 9：ELF文件支持</span>
+                      <a href="/2021/07/31/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-9-ELF%E6%96%87%E4%BB%B6%E6%94%AF%E6%8C%81/" title="LLVM 后端实践笔记 9：ELF文件支持">
+                        <span class="hidden-mobile">LLVM 后端实践笔记 9：ELF文件支持</span>
                         <span class="visible-mobile">Next</span>
                         <i class="iconfont icon-arrowright"></i>
                       </a>

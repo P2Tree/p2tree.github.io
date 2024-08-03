@@ -117,3 +117,8 @@ opt -enable-new-pm
 开始着手移除使用 legacy pass manager 的优化 pipeline，我们先要确保在 new pass manager 中都能有配套的替代。目前已知的模块：bugpoint，LLVM C API，GPU divergency analysis。
 
 前边提到，后端 codegen pipeline 仍然工作在 legacy pass manager。虽然已经有一些后端切换到了 new pass manager，但离实用仍然有一段距离。这是改善 LLVM 代码很好的切入点，感兴趣可以与 llvm-dev 沟通。
+
+---
+{% note info %}
+本文同步发布在知乎账号下：[LLVM New Pass Manager - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/588822158)
+{% endnote %}

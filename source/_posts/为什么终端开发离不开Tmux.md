@@ -294,6 +294,7 @@ tmux 的默认键位是很反人类的，不但很难记得住，而且点击起
 
 有疑问和请求都可以给我留言，也请 feel free 指出文中的错误。
 
-## 外链
-
-本文同步发布在知乎账号下 [https://zhuanlan.zhihu.com/p/639084118](https://zhuanlan.zhihu.com/p/639084118)
+---
+{% note info %}
+本文同步发布在知乎账号下：[为什么终端开发离不开 Tmux - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/639084118)
+{% endnote %}

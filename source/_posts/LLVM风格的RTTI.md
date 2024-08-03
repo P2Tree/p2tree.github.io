@@ -329,6 +329,7 @@ LLVM 文档提到，这种方案只有在开放结构中用，在其他场景下
 
 早前的实现中没有 CastInfo 这一层，这次写文时才看到 LLVM 更新了文档，介绍了这部分内容，简单看了下实现，但目前还没有用到过，感兴趣小伙伴可以到 [How to set up LLVM-style RTTI for your class hierarchy — LLVM 18.0.0git documentation](https://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html#advanced-use-cases) 了解或者看源码 `include/llvm/Support/Casting.h` 学习，其中写了很多注释帮助理解。
 
-## 外链
-
-本文同步发布在知乎账号下 [LLVM 风格的 RTTI - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/650022272)
+---
+{% note info %}
+本文同步发布在知乎账号下：[LLVM 风格的 RTTI - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/650022272)
+{% endnote %}

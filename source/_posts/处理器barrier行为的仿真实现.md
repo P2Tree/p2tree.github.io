@@ -274,7 +274,8 @@ void Barrier::consume(unsigned PC, unsigned TID) {
 
 另一方面，并发编程需要处理很多细节，一些极端的异常需要在非常苛刻的环境下才能复现，而且调试也非常困难，本文中列举的示例场景依然只是其中一部分。Demo 中的代码实现比文章中的要复杂一些，因为其中处理了一些并发的小问题，比如应对 wait 的虚假唤醒，感兴趣的朋友可以找网上其他资料了解，有很多文章介绍。
 
-## 外链
-
-本文同步发布在知乎账号下 [https://zhuanlan.zhihu.com/p/703597874](https://zhuanlan.zhihu.com/p/703597874)
+---
+{% note info %}
+本文同步发布在知乎账号下：[处理器 barrier 行为的仿真实现 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/703597874)
+{% endnote %}
 

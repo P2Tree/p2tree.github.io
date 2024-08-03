@@ -1,10 +1,9 @@
 ---
-title: LLVM后端实践笔记 8：函数调用
+title: LLVM 后端实践笔记 8：函数调用
 date: 2021-07-24 23:01:27
 tags:
   - 编译器
   - LLVM
-  - CPP
 index_img: /img/20210724/index_small.png
 banner_img: /img/20210724/index.png
 categories: 软件开发
@@ -383,3 +382,8 @@ build/bin/llc -march=cpu0 -mcpu=cpu032I -relocation-model=static -filetype=asm -
 到目前为止，Cpu0 后端代码已经可以处理整形的函数调用和控制条件了。它已经能够编译简单的 C 程序代码了（实际上 C++ 代码中非 C++ 特性的代码也一样能够支持，毕竟这是 Clang 前端在做的事情）。LLVM 对编译技术的完美实践，使得我们能够在它的基础上灵活轻松的支持任何形式的机器架构。三段式的编译结构，可以让后端伴随着前端支持不同编程语言的同时，得到自由的发展。
 
 下一章，我们要实现输出 ELF 文件的功能支持，虽然我们的 Cpu0 后端没有实际的硬件，只能通过模拟器运行，但假设这是一个实际的硬件后端，只有能够输出标准的可执行二进制文件，才能在真正的机器上运行，所以这部分功能依然是后端不可缺少的一部分。
+
+---
+{% note info %}
+本文同步发布在知乎账号下：[LLVM 后端实践笔记 8：函数调用 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/392688343)
+{% endnote %}

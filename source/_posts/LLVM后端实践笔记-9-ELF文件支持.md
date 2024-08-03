@@ -1,10 +1,9 @@
 ---
-title: LLVM后端实践笔记 9：ELF文件支持
+title: LLVM 后端实践笔记 9：ELF文件支持
 date: 2021-07-31 23:04:26
 tags:
   - 编译器
   - LLVM
-  - CPP
 index_img: /img/20210731/index_small.png
 banner_img: /img/20210731/index.png
 categories: 软件开发
@@ -122,3 +121,8 @@ build/bin/llvm-objdump -d ch5.o
 ## 9.3 总结
 
 以上就是本章的全部内容，这一章比较简单，LLVM 为我们实现了大部分的支持 ELF 文件格式输出的特性。下一章我们会支持汇编器功能。
+
+---
+{% note info %}
+本文同步发布在知乎账号下：[LLVM 后端实践笔记 9：ELF 文件支持 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/395013751)
+{% endnote %}

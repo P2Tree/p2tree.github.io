@@ -169,8 +169,6 @@ clang 提供的运行时库中对原子操作的接口与 GCC 的标准库中提
 
 还有一个特别要说明的是，无论是 GCC 的原子库，还是 clang 的原子库，都必须要求所有输入输出数据的数据长度要保持一致，第一个参数是指针类型，也需要要求指针类型指向的数据类型长度保持一致，否则会出现编译错误。
 
----
-
 ### 其他说明
 
 本文没有提到 GCC 旧版本的 `__sync__` 开头的原子操作，旧版本没有 memory model 的参数配置。clang 中对该接口也有支持。
@@ -192,3 +190,8 @@ clang 提供的运行时库中对原子操作的接口与 GCC 的标准库中提
 - [https://clang.llvm.org/docs/LanguageExtensions.html#c11-atomic-builtins](https://clang.llvm.org/docs/LanguageExtensions.html#c11-atomic-builtins)，提到了 clang 中支持的 builtin 接口；
 
 - [https://releases.llvm.org/8.0.1/docs/Atomics.html#libcalls-atomic](https://releases.llvm.org/8.0.1/docs/Atomics.html#libcalls-atomic)，提到了 clang 的运行时库中提供的接口；
+
+---
+{% note info %}
+本文同步发布在知乎账号下：[GCC 和 Clang 的原子库支持 (zhihu.com)](https://zhuanlan.zhihu.com/p/437343936)
+{% endnote %}

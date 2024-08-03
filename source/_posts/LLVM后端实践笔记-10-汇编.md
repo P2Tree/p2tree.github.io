@@ -4,7 +4,6 @@ date: 2021-08-07 23:15:39
 tags:
   - 编译器
   - LLVM
-  - CPP
 index_img: /img/20210807/index_small.jpg
 banner_img: /img/20210807/index.jpg
 categories: 软件开发
@@ -219,3 +218,8 @@ build/bin/llc -march=cpu0 -mcpu=cpu032I -relocation-model=pic -filetype=asm ch10
 ```
 
 检查汇编文件中，使用 `#APP` 和 `#NO_APP` 包含在中间的代码就是内联汇编代码。内联汇编默认的标识是 `#APP`，这个符号也可以修改。
+
+---
+{% note info %}
+本文同步发布在知乎账号下：[LLVM 后端实践笔记 10：汇编 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/397262087)
+{% endnote %}

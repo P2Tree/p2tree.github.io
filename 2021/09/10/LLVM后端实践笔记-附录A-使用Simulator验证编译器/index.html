@@ -1,297 +1,168 @@
-
-
-<!DOCTYPE html>
-<html lang="en" data-default-color-scheme=auto>
-
-
-
-<head>
-  <meta charset="UTF-8">
-
-  <link rel="apple-touch-icon" sizes="76x76" href="/img/avatar.jpg">
-  <link rel="icon" href="/img/avatar.jpg">
-  
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  
-  <meta name="theme-color" content="#2f4154">
-  <meta name="author" content="P2Tree">
-  <meta name="keywords" content="">
-  
-    <meta name="description" content="最近家里事情比较多，拖了一段时间。这个笔记已经基本完成了，还剩下最后一章，使用 simulator 来验证我们开发的编译器，我将其放到附录里，是因为它不属于开发工作，只是辅助工具。我们的 Simulator 实现了 Cpu0 的指令功能，从而可以将 hex 格式的代码文件在之上运行，并能在终端中查看运行结果。 A.1 运行 SimulatorA.1.1 编译 Simulator我们的 Simula">
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器 | P2Tree Home</title><meta name="author" content="P2Tree"><meta name="copyright" content="P2Tree"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="最近家里事情比较多，拖了一段时间。这个笔记已经基本完成了，还剩下最后一章，使用 simulator 来验证我们开发的编译器，我将其放到附录里，是因为它不属于开发工作，只是辅助工具。我们的 Simulator 实现了 Cpu0 的指令功能，从而可以将 hex 格式的代码文件在之上运行，并能在终端中查看运行结果。 A.1 运行 SimulatorA.1.1 编译 Simulator我们的 Simula">
 <meta property="og:type" content="article">
 <meta property="og:title" content="LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器">
 <meta property="og:url" content="http://p2tree.github.io/2021/09/10/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-%E9%99%84%E5%BD%95A-%E4%BD%BF%E7%94%A8Simulator%E9%AA%8C%E8%AF%81%E7%BC%96%E8%AF%91%E5%99%A8/index.html">
 <meta property="og:site_name" content="P2Tree Home">
 <meta property="og:description" content="最近家里事情比较多，拖了一段时间。这个笔记已经基本完成了，还剩下最后一章，使用 simulator 来验证我们开发的编译器，我将其放到附录里，是因为它不属于开发工作，只是辅助工具。我们的 Simulator 实现了 Cpu0 的指令功能，从而可以将 hex 格式的代码文件在之上运行，并能在终端中查看运行结果。 A.1 运行 SimulatorA.1.1 编译 Simulator我们的 Simula">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://p2tree.github.io/img/20210910/index_small.jpg">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
 <meta property="article:published_time" content="2021-09-10T09:12:50.000Z">
 <meta property="article:modified_time" content="2024-08-02T14:10:30.841Z">
 <meta property="article:author" content="P2Tree">
-<meta property="article:tag" content="仿真">
-<meta property="article:tag" content="LLVM">
 <meta property="article:tag" content="编译器">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://p2tree.github.io/img/20210910/index_small.jpg">
-  
-  
-    <meta name="referrer" content="no-referrer-when-downgrade">
-  
-  
-  <title>LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器 - P2Tree Home</title>
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
-
-
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
-
-
-
-<!-- 主题依赖的图标库，不要自行修改 -->
-<!-- Do not modify the link that theme dependent icons -->
-
-<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
-
-
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
-
-
-<link  rel="stylesheet" href="/css/main.css" />
-
-
-  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
-  
-    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
-  
-
-
-
-
-  <script id="fluid-configs">
-    var Fluid = window.Fluid || {};
-    Fluid.ctx = Object.assign({}, Fluid.ctx)
-    var CONFIG = {"hostname":"p2tree.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"|","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"❡"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null},"woyaola":null,"cnzz":null},"search_path":"/local-search.xml","include_content_in_search":true};
-
-    if (CONFIG.web_analytics.follow_dnt) {
-      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
-      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
-    }
-  </script>
-  <script  src="/js/utils.js" ></script>
-  <script  src="/js/color-schema.js" ></script>
-  
-
-
-  
-<meta name="generator" content="Hexo 7.2.0"><link rel="alternate" href="/atom.xml" title="P2Tree Home" type="application/atom+xml">
-</head>
-
-
-<body>
-  
-
-  <header>
-    
-
-<div class="header-inner" style="height: 70vh;">
-  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
-  <div class="container">
-    <a class="navbar-brand" href="/">
-      <strong>P2Tree Home</strong>
-    </a>
-
-    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
-            data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <div class="animated-icon"><span></span><span></span><span></span></div>
-    </button>
-
-    <!-- Collapsible content -->
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ml-auto text-center">
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/" target="_self">
-                <i class="iconfont icon-home-fill"></i>
-                <span>Home</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/archives/" target="_self">
-                <i class="iconfont icon-archive-fill"></i>
-                <span>Archives</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/categories/" target="_self">
-                <i class="iconfont icon-category-fill"></i>
-                <span>Categories</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/" target="_self">
-                <i class="iconfont icon-tags-fill"></i>
-                <span>Tags</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/about/" target="_self">
-                <i class="iconfont icon-user-fill"></i>
-                <span>About</span>
-              </a>
-            </li>
-          
-        
-        
-          <li class="nav-item" id="search-btn">
-            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
-              <i class="iconfont icon-search"></i>
-            </a>
-          </li>
-          
-        
-        
-          <li class="nav-item" id="color-toggle-btn">
-            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
-              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
-            </a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-</nav>
-
-  
-
-<div id="banner" class="banner" parallax=true
-     style="background: url('/img/20210910/index.jpg') no-repeat center center; background-size: cover;">
-  <div class="full-bg-img">
-    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
-      <div class="banner-text text-center fade-in-up">
-        <div class="h2">
-          
-            <span id="subtitle" data-typed-text="LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器"></span>
-          
-        </div>
-
-        
-          
-  <div class="mt-3">
-    
-    
-      <span class="post-meta">
-        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2021-09-10 17:12" pubdate>
-          September 10, 2021 pm
-        </time>
-      </span>
-    
-  </div>
-
-  <div class="mt-1">
-    
-      <span class="post-meta mr-2">
-        <i class="iconfont icon-chart"></i>
-        
-          1.9k words
-        
-      </span>
-    
-
-    
-      <span class="post-meta mr-2">
-        <i class="iconfont icon-clock-fill"></i>
-        
-        
-        
-          17 mins
-        
-      </span>
-    
-
-    
-    
-  </div>
-
-
-        
-      </div>
-
+<meta property="article:tag" content="LLVM">
+<meta property="article:tag" content="仿真">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://p2tree.github.io/2021/09/10/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-%E9%99%84%E5%BD%95A-%E4%BD%BF%E7%94%A8Simulator%E9%AA%8C%E8%AF%81%E7%BC%96%E8%AF%91%E5%99%A8/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Error',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-08-02 22:10:30'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
-    </div>
-  </div>
-</div>
-
-</div>
-
-  </header>
-
-  <main>
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
     
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
       
-
-<div class="container-fluid nopadding-x">
-  <div class="row nomargin-x">
-    <div class="side-col d-none d-lg-block col-lg-2">
-      
-
-    </div>
-
-    <div class="col-lg-8 nopadding-x-md">
-      <div class="container nopadding-x-md" id="board-ctn">
-        <div id="board">
-          <article class="post-content mx-auto">
-            <h1 id="seo-header">LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器</h1>
-            
-            
-              <div class="markdown-body">
-                
-                <p>最近家里事情比较多，拖了一段时间。这个笔记已经基本完成了，还剩下最后一章，使用 simulator 来验证我们开发的编译器，我将其放到附录里，是因为它不属于开发工作，只是辅助工具。我们的 Simulator 实现了 Cpu0 的指令功能，从而可以将 hex 格式的代码文件在之上运行，并能在终端中查看运行结果。</p>
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.2.0"><link rel="alternate" href="/atom.xml" title="P2Tree Home" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">5</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="P2Tree Home"><img class="site-icon" src="/img/avatar.png"/><span class="site-name">P2Tree Home</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2021-09-10T09:12:50.000Z" title="Created 2021-09-10 17:12:50">2021-09-10</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2024-08-02T14:10:30.841Z" title="Updated 2024-08-02 22:10:30">2024-08-02</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/">软件开发</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>最近家里事情比较多，拖了一段时间。这个笔记已经基本完成了，还剩下最后一章，使用 simulator 来验证我们开发的编译器，我将其放到附录里，是因为它不属于开发工作，只是辅助工具。我们的 Simulator 实现了 Cpu0 的指令功能，从而可以将 hex 格式的代码文件在之上运行，并能在终端中查看运行结果。</p>
 <h3 id="A-1-运行-Simulator"><a href="#A-1-运行-Simulator" class="headerlink" title="A.1 运行 Simulator"></a>A.1 运行 Simulator</h3><h3 id="A-1-1-编译-Simulator"><a href="#A-1-1-编译-Simulator" class="headerlink" title="A.1.1 编译 Simulator"></a>A.1.1 编译 Simulator</h3><p>我们的 Simulator 使用 Verilog 语言实现，我借用了原作者提供的代码，代码文件是 cpu0.v，需要使用 verilog 编译器将其编译成可执行文件。</p>
 <p>在我的 Mac 上，安装 iverilog 软件，它可以用来编译 verilog 代码：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">brew install icarus-verilog<br></code></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">brew install icarus-verilog</span><br></pre></td></tr></table></figure>
 
 <p>安装后，编译的命令是：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">iverilog -D TRACE -o cpu0Is cpu0.v<br>iverilog -D TRACE -D CPU0II -o cpu0IIs cpu0.v<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">iverilog -D TRACE -o cpu0Is cpu0.v</span><br><span class="line">iverilog -D TRACE -D CPU0II -o cpu0IIs cpu0.v</span><br></pre></td></tr></table></figure>
 
 <p>通过传参编译出两种不同字节序的机器文件。<code>-D TRACE</code> 是定义一个 verilog 中的宏变量，用来表示需要追踪运行时寄存器和内存的值。</p>
 <p>运行我们的代码不能只提供 main 函数，还需要提供一些启动引导代码和辅助函数，比如 print 一类。</p>
@@ -326,10 +197,10 @@
 </li>
 </ol>
 <p>最后我们就能得到能够执行的 hex 文件了。执行命令：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs shell">bash build.sh cpu032I be<br>bash build.sh cpu032II be<br>bash build.sh cpu032I le<br>bash build.sh cpu032II le<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">bash build.sh cpu032I be</span><br><span class="line">bash build.sh cpu032II be</span><br><span class="line">bash build.sh cpu032I le</span><br><span class="line">bash build.sh cpu032II le</span><br></pre></td></tr></table></figure>
 <h3 id="A-1-4-执行-Simulator"><a href="#A-1-4-执行-Simulator" class="headerlink" title="A.1.4 执行 Simulator"></a>A.1.4 执行 Simulator</h3><p>在调用 Simulator 时，需要把生成的 hex 文件命名为 cpu0.hex 文件，并放到和 Simulator 同一个路径下。第 3 步中的脚本已经默认生成了 cpu0.hex 文件。</p>
 <p>终端执行：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs shell">./cpu0IIs<br>./cpu0Is<br></code></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">./cpu0IIs</span><br><span class="line">./cpu0Is</span><br></pre></td></tr></table></figure>
 
 <p>选择二者之一，Simulator 就会打印出执行的每一步的信息。</p>
 <p>最后会打印出 total cpu cycles，可以大致评价编译器和处理器的性能，这里只能看到 cpu 的 cycle，而无法查看 IO 的 cycle。理论上说 cpu0IIs 会比 cpu0Is 获得更好的执行性能，这个就体现了不同硬件的性能差异（主要是 <code>slt</code>, <code>beq</code> 指令等提升）。</p>
@@ -340,441 +211,5 @@
 <p>这个教程对我自己来说，也是学习、巩固和回顾的过程，在完成教程期间，我得到了很多朋友和网友的支持，谢谢你们，我也知道谦虚谨慎是学习进步必备的素养，所以后续有时间，我会继续完善这个系列的代码，解决已知 bug，测试更复杂的软件用例。</p>
 <p>有网友私信问我如何学习熟悉 LLVM 的系统，我大概总结的回答是，不要想很快的掌握所有的东西，最有效的办法就是自己亲自动手，去做一个编译器，去解决实际遇到的问题，探索各种对自己有用的调试开发方法，再去追根溯源，阅读 LLVM 公开的源码，学习了解别人的设计思路，最后辅助以官方文档的解释就可以了。当然，对于完全没有概念的初学者，适当看一些中文教程，也是有帮助的。</p>
 <hr>
-<div class="note note-info">
-            <p>本文同步发布在知乎账号下：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/409067375">LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器</a></p>
-          </div>
-                
-              </div>
-            
-            <hr/>
-            <div>
-              <div class="post-metas my-3">
-  
-    <div class="post-meta mr-3 d-flex align-items-center">
-      <i class="iconfont icon-category"></i>
-      
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/" class="category-chain-item">软件开发</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-    </div>
-  
-  
-    <div class="post-meta">
-      <i class="iconfont icon-tags"></i>
-      
-        <a href="/tags/%E4%BB%BF%E7%9C%9F/" class="print-no-link">#仿真</a>
-      
-        <a href="/tags/LLVM/" class="print-no-link">#LLVM</a>
-      
-        <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" class="print-no-link">#编译器</a>
-      
-    </div>
-  
-</div>
-
-
-              
-  
-
-  <div class="license-box my-3">
-    <div class="license-title">
-      <div>LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器</div>
-      <div>http://p2tree.github.io/2021/09/10/LLVM后端实践笔记-附录A-使用Simulator验证编译器/</div>
-    </div>
-    <div class="license-meta">
-      
-        <div class="license-meta-item">
-          <div>Author</div>
-          <div>P2Tree</div>
-        </div>
-      
-      
-        <div class="license-meta-item license-meta-date">
-          <div>Posted on</div>
-          <div>September 10, 2021</div>
-        </div>
-      
-      
-      
-        <div class="license-meta-item">
-          <div>Licensed under</div>
-          <div>
-            
-              
-              
-                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
-                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
-                    <i class="iconfont icon-cc-by"></i>
-                  </span>
-                </a>
-              
-            
-          </div>
-        </div>
-      
-    </div>
-    <div class="license-icon iconfont"></div>
-  </div>
-
-
-
-              
-                <div class="post-prevnext my-3">
-                  <article class="post-prev col-6">
-                    
-                    
-                      <a href="/2021/11/29/GCC%E5%92%8CClang%E7%9A%84%E5%8E%9F%E5%AD%90%E5%BA%93%E6%94%AF%E6%8C%81/" title="GCC 和 Clang 的原子库支持">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">GCC 和 Clang 的原子库支持</span>
-                        <span class="visible-mobile">Previous</span>
-                      </a>
-                    
-                  </article>
-                  <article class="post-next col-6">
-                    
-                    
-                      <a href="/2021/08/07/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-10-%E6%B1%87%E7%BC%96/" title="LLVM 后端实践笔记 10：汇编">
-                        <span class="hidden-mobile">LLVM 后端实践笔记 10：汇编</span>
-                        <span class="visible-mobile">Next</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
-                    
-                  </article>
-                </div>
-              
-            </div>
-
-            
-  
-  
-    <article id="comments" lazyload>
-      
-  <script type="text/javascript">
-    Fluid.utils.loadComments('#comments', function() {
-      var light = 'github-light';
-      var dark = 'github-dark';
-      var schema = document.documentElement.getAttribute('data-user-color-scheme');
-      if (schema === 'dark') {
-        schema = dark;
-      } else {
-        schema = light;
-      }
-      window.UtterancesThemeLight = light;
-      window.UtterancesThemeDark = dark;
-      var s = document.createElement('script');
-      s.setAttribute('src', 'https://utteranc.es/client.js');
-      s.setAttribute('repo', 'p2tree/p2tree.github.io');
-      s.setAttribute('issue-term', 'pathname');
-      
-      s.setAttribute('label', 'utterances');
-      
-      s.setAttribute('theme', schema);
-      s.setAttribute('crossorigin', 'anonymous');
-      document.getElementById('comments').appendChild(s);
-    })
-  </script>
-  <noscript>Please enable JavaScript to view the comments</noscript>
-
-
-    </article>
-  
-
-
-          </article>
-        </div>
-      </div>
-    </div>
-
-    <div class="side-col d-none d-lg-block col-lg-2">
-      
-  <aside class="sidebar" style="margin-left: -1rem">
-    <div id="toc">
-  <p class="toc-header">
-    <i class="iconfont icon-list"></i>
-    <span>Table of Contents</span>
-  </p>
-  <div class="toc-body" id="toc-body"></div>
-</div>
-
-
-
-  </aside>
-
-
-    </div>
-  </div>
-</div>
-
-
-
-
-
-  
-
-
-
-  
-
-
-
-  
-
-
-
-  
-
-
-
-  
-
-
-
-
-
-
-
-    
-
-    
-      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
-        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
-      </a>
-    
-
-    
-      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
-     aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header text-center">
-        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
-        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body mx-3">
-        <div class="md-form mb-5">
-          <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
-        </div>
-        <div class="list-group" id="local-search-result"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-    
-
-    
-  </main>
-
-  <footer>
-    <div class="footer-inner">
-  
-    <div class="footer-content">
-       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
-    </div>
-  
-  
-    <div class="statistics">
-  
-  
-
-  
-    
-      <span id="busuanzi_container_site_pv" style="display: none">
-        Views: 
-        <span id="busuanzi_value_site_pv"></span>
-        
-      </span>
-    
-    
-      <span id="busuanzi_container_site_uv" style="display: none">
-        Visitors: 
-        <span id="busuanzi_value_site_uv"></span>
-        
-      </span>
-    
-    
-
-  
-
-</div>
-
-  
-  
-</div>
-
-  </footer>
-
-  <!-- Scripts -->
-  
-  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
-  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
-
-  <script>
-    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
-    NProgress.start()
-    window.addEventListener('load', function() {
-      NProgress.done();
-    })
-  </script>
-
-
-<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
-<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
-<script  src="/js/events.js" ></script>
-<script  src="/js/plugins.js" ></script>
-
-
-  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
-  <script>
-    (function (window, document) {
-      var typing = Fluid.plugins.typing;
-      var subtitle = document.getElementById('subtitle');
-      if (!subtitle || !typing) {
-        return;
-      }
-      var text = subtitle.getAttribute('data-typed-text');
-      
-        typing(text);
-      
-    })(window, document);
-  </script>
-
-
-
-
-  
-    <script  src="/js/img-lazyload.js" ></script>
-  
-
-
-
-
-  
-<script>
-  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
-    var toc = jQuery('#toc');
-    if (toc.length === 0 || !window.tocbot) { return; }
-    var boardCtn = jQuery('#board-ctn');
-    var boardTop = boardCtn.offset().top;
-
-    window.tocbot.init(Object.assign({
-      tocSelector     : '#toc-body',
-      contentSelector : '.markdown-body',
-      linkClass       : 'tocbot-link',
-      activeLinkClass : 'tocbot-active-link',
-      listClass       : 'tocbot-list',
-      isCollapsedClass: 'tocbot-is-collapsed',
-      collapsibleClass: 'tocbot-is-collapsible',
-      scrollSmooth    : true,
-      includeTitleTags: true,
-      headingsOffset  : -boardTop,
-    }, CONFIG.toc));
-    if (toc.find('.toc-list-item').length > 0) {
-      toc.css('visibility', 'visible');
-    }
-
-    Fluid.events.registerRefreshCallback(function() {
-      if ('tocbot' in window) {
-        tocbot.refresh();
-        var toc = jQuery('#toc');
-        if (toc.length === 0 || !tocbot) {
-          return;
-        }
-        if (toc.find('.toc-list-item').length > 0) {
-          toc.css('visibility', 'visible');
-        }
-      }
-    });
-  });
-</script>
-
-
-  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
-
-  <script>Fluid.plugins.codeWidget();</script>
-
-
-  
-<script>
-  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
-    window.anchors.options = {
-      placement: CONFIG.anchorjs.placement,
-      visible  : CONFIG.anchorjs.visible
-    };
-    if (CONFIG.anchorjs.icon) {
-      window.anchors.options.icon = CONFIG.anchorjs.icon;
-    }
-    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
-    var res = [];
-    for (var item of el) {
-      res.push('.markdown-body > ' + item.trim());
-    }
-    if (CONFIG.anchorjs.placement === 'left') {
-      window.anchors.options.class = 'anchorjs-link-left';
-    }
-    window.anchors.add(res.join(', '));
-
-    Fluid.events.registerRefreshCallback(function() {
-      if ('anchors' in window) {
-        anchors.removeAll();
-        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
-        var res = [];
-        for (var item of el) {
-          res.push('.markdown-body > ' + item.trim());
-        }
-        if (CONFIG.anchorjs.placement === 'left') {
-          anchors.options.class = 'anchorjs-link-left';
-        }
-        anchors.add(res.join(', '));
-      }
-    });
-  });
-</script>
-
-
-  
-<script>
-  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
-    Fluid.plugins.fancyBox();
-  });
-</script>
-
-
-  <script>Fluid.plugins.imageCaption();</script>
-
-  <script  src="/js/local-search.js" ></script>
-
-  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
-
-
-
-
-
-<!-- 主题的启动项，将它保持在最底部 -->
-<!-- the boot of the theme, keep it at the bottom -->
-<script  src="/js/boot.js" ></script>
-
-
-  
-
-  <noscript>
-    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
-  </noscript>
-</body>
-</html>
+<div class="note info flat"><p>本文同步发布在知乎账号下：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/409067375">LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器</a></p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="http://p2tree.github.io">P2Tree</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="http://p2tree.github.io/2021/09/10/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-%E9%99%84%E5%BD%95A-%E4%BD%BF%E7%94%A8Simulator%E9%AA%8C%E8%AF%81%E7%BC%96%E8%AF%91%E5%99%A8/">http://p2tree.github.io/2021/09/10/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-%E9%99%84%E5%BD%95A-%E4%BD%BF%E7%94%A8Simulator%E9%AA%8C%E8%AF%81%E7%BC%96%E8%AF%91%E5%99%A8/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/">编译器</a><a class="post-meta__tags" href="/tags/LLVM/">LLVM</a><a class="post-meta__tags" href="/tags/%E4%BB%BF%E7%9C%9F/">仿真</a></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/11/29/GCC%E5%92%8CClang%E7%9A%84%E5%8E%9F%E5%AD%90%E5%BA%93%E6%94%AF%E6%8C%81/" title="GCC 和 Clang 的原子库支持"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">Previous</div><div class="prev_info">GCC 和 Clang 的原子库支持</div></div></a></div><div class="next-post pull-right"><a href="/2021/08/07/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-10-%E6%B1%87%E7%BC%96/" title="LLVM 后端实践笔记 10：汇编"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">Next</div><div class="next_info">LLVM 后端实践笔记 10：汇编</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2021/08/07/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-10-%E6%B1%87%E7%BC%96/" title="LLVM 后端实践笔记 10：汇编"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-08-07</div><div class="title">LLVM 后端实践笔记 10：汇编</div></div></a></div><div><a href="/2021/06/06/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-5-%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F/" title="LLVM 后端实践笔记 5：全局变量"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-06-06</div><div class="title">LLVM 后端实践笔记 5：全局变量</div></div></a></div><div><a href="/2021/06/19/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-6-%E6%9B%B4%E5%A4%9A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" title="LLVM 后端实践笔记 6：更多数据类型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-06-19</div><div class="title">LLVM 后端实践笔记 6：更多数据类型</div></div></a></div><div><a href="/2021/07/31/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-9-ELF%E6%96%87%E4%BB%B6%E6%94%AF%E6%8C%81/" title="LLVM 后端实践笔记 9：ELF文件支持"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-31</div><div class="title">LLVM 后端实践笔记 9：ELF文件支持</div></div></a></div><div><a href="/2021/07/04/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-7-%E6%8E%A7%E5%88%B6%E6%B5%81/" title="LLVM 后端实践笔记 7：控制流"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-04</div><div class="title">LLVM 后端实践笔记 7：控制流</div></div></a></div><div><a href="/2021/07/24/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-8-%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8/" title="LLVM 后端实践笔记 8：函数调用"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-24</div><div class="title">LLVM 后端实践笔记 8：函数调用</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">P2Tree</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#A-1-%E8%BF%90%E8%A1%8C-Simulator"><span class="toc-number">1.</span> <span class="toc-text">A.1 运行 Simulator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#A-1-1-%E7%BC%96%E8%AF%91-Simulator"><span class="toc-number">2.</span> <span class="toc-text">A.1.1 编译 Simulator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#A-1-2-%E5%90%AF%E5%8A%A8%E5%BC%95%E5%AF%BC%E6%96%87%E4%BB%B6"><span class="toc-number">3.</span> <span class="toc-text">A.1.2 启动引导文件</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-start-h"><span class="toc-number">3.1.</span> <span class="toc-text">(1) start.h</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-boot-c"><span class="toc-number">3.2.</span> <span class="toc-text">(2) boot.c</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-print-h-c"><span class="toc-number">3.3.</span> <span class="toc-text">(3) print.h&#x2F;c</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-run-c"><span class="toc-number">3.4.</span> <span class="toc-text">(4) run.c</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#A-1-3-%E6%9E%84%E5%BB%BA-hex-%E6%96%87%E4%BB%B6%E8%84%9A%E6%9C%AC"><span class="toc-number">4.</span> <span class="toc-text">A.1.3 构建 hex 文件脚本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#A-1-4-%E6%89%A7%E8%A1%8C-Simulator"><span class="toc-number">5.</span> <span class="toc-text">A.1.4 执行 Simulator</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#A-2-%E7%BB%93%E5%B0%BE"><span class="toc-number">6.</span> <span class="toc-text">A.2 结尾</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><div class="content"><a class="title" href="/2024/07/02/%E5%9C%A8%E9%A3%9E%E9%80%9D%E7%9A%84%E6%97%B6%E5%85%89%E4%B8%AD%EF%BC%8C%E4%BB%96%E4%BB%AC%E8%AE%A9%E6%9C%AA%E6%9D%A5%E6%9C%89%E6%89%80%E6%9C%9F%E5%BE%85/" title="在飞逝的时光中，他们让未来有所期待">在飞逝的时光中，他们让未来有所期待</a><time datetime="2024-07-02T05:06:24.000Z" title="Created 2024-07-02 13:06:24">2024-07-02</time></div></div><div class="aside-list-item"><div class="content"><a class="title" href="/2024/06/19/%E6%89%91%E5%85%8B%E6%98%86%E7%89%B9%E7%89%8C%E7%8E%A9%E6%B3%95%E8%AE%BE%E8%AE%A1/" title="扑克昆特牌玩法设计">扑克昆特牌玩法设计</a><time datetime="2024-06-19T02:00:00.000Z" title="Created 2024-06-19 10:00:00">2024-06-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/06/16/%E5%A4%84%E7%90%86%E5%99%A8barrier%E8%A1%8C%E4%B8%BA%E7%9A%84%E4%BB%BF%E7%9C%9F%E5%AE%9E%E7%8E%B0/" title="处理器 barrier 行为的仿真实现">处理器 barrier 行为的仿真实现</a><time datetime="2024-06-16T02:00:00.000Z" title="Created 2024-06-16 10:00:00">2024-06-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/10/14/Vim%20%E9%AB%98%E6%95%88%E7%BC%96%E8%BE%91%E6%8A%80%E5%B7%A7/" title="Vim 高效编辑技巧">Vim 高效编辑技巧</a><time datetime="2023-10-14T02:00:00.000Z" title="Created 2023-10-14 10:00:00">2023-10-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/08/14/LLVM%E9%A3%8E%E6%A0%BC%E7%9A%84RTTI/" title="LLVM 风格的 RTTI">LLVM 风格的 RTTI</a><time datetime="2023-08-14T06:47:40.000Z" title="Created 2023-08-14 14:47:40">2023-08-14</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By P2Tree</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

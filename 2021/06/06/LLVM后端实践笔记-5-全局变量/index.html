@@ -1,290 +1,161 @@
-
-
-<!DOCTYPE html>
-<html lang="en" data-default-color-scheme=auto>
-
-
-
-<head>
-  <meta charset="UTF-8">
-
-  <link rel="apple-touch-icon" sizes="76x76" href="/img/avatar.jpg">
-  <link rel="icon" href="/img/avatar.jpg">
-  
-
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  
-  <meta name="theme-color" content="#2f4154">
-  <meta name="author" content="P2Tree">
-  <meta name="keywords" content="">
-  
-    <meta name="description" content="之前的几章，只访问了局部变量，在这一章中，我们要处理全局变量的访问。全局变量的 DAG 翻译不同于之前的 DAG 翻译。它的 DAG 翻译，需要额外依据 llc -relocation-model 参数（指定重定位模式是静态重定位还是运行时重定位），在后端创建 IR DAG 节点，而其他的 DAG 只需根据输入文件来直接做 DAG 的翻译 （伪指令除外）。大家需要专注于如何在执行时创建 DAG 节">
+<!DOCTYPE html><html lang="en" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>LLVM 后端实践笔记 5：全局变量 | P2Tree Home</title><meta name="author" content="P2Tree"><meta name="copyright" content="P2Tree"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="之前的几章，只访问了局部变量，在这一章中，我们要处理全局变量的访问。全局变量的 DAG 翻译不同于之前的 DAG 翻译。它的 DAG 翻译，需要额外依据 llc -relocation-model 参数（指定重定位模式是静态重定位还是运行时重定位），在后端创建 IR DAG 节点，而其他的 DAG 只需根据输入文件来直接做 DAG 的翻译 （伪指令除外）。大家需要专注于如何在执行时创建 DAG 节">
 <meta property="og:type" content="article">
 <meta property="og:title" content="LLVM 后端实践笔记 5：全局变量">
 <meta property="og:url" content="http://p2tree.github.io/2021/06/06/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-5-%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F/index.html">
 <meta property="og:site_name" content="P2Tree Home">
 <meta property="og:description" content="之前的几章，只访问了局部变量，在这一章中，我们要处理全局变量的访问。全局变量的 DAG 翻译不同于之前的 DAG 翻译。它的 DAG 翻译，需要额外依据 llc -relocation-model 参数（指定重定位模式是静态重定位还是运行时重定位），在后端创建 IR DAG 节点，而其他的 DAG 只需根据输入文件来直接做 DAG 的翻译 （伪指令除外）。大家需要专注于如何在执行时创建 DAG 节">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://p2tree.github.io/img/20210606/index_small.png">
+<meta property="og:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png">
 <meta property="article:published_time" content="2021-06-06T13:38:10.000Z">
 <meta property="article:modified_time" content="2024-08-03T13:59:52.692Z">
 <meta property="article:author" content="P2Tree">
-<meta property="article:tag" content="LLVM">
 <meta property="article:tag" content="编译器">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="http://p2tree.github.io/img/20210606/index_small.png">
-  
-  
-    <meta name="referrer" content="no-referrer-when-downgrade">
-  
-  
-  <title>LLVM 后端实践笔记 5：全局变量 - P2Tree Home</title>
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
-
-
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
-
-  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
-
-
-
-<!-- 主题依赖的图标库，不要自行修改 -->
-<!-- Do not modify the link that theme dependent icons -->
-
-<link rel="stylesheet" href="//at.alicdn.com/t/c/font_1749284_5i9bdhy70f8.css">
-
-
-
-<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
-
-
-<link  rel="stylesheet" href="/css/main.css" />
-
-
-  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
-  
-    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
-  
-
-
-
-
-  <script id="fluid-configs">
-    var Fluid = window.Fluid || {};
-    Fluid.ctx = Object.assign({}, Fluid.ctx)
-    var CONFIG = {"hostname":"p2tree.github.io","root":"/","version":"1.9.8","typing":{"enable":true,"typeSpeed":70,"cursorChar":"|","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":"❡"},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false},"umami":{"src":null,"website_id":null,"domains":null,"start_time":"2024-01-01T00:00:00.000Z","token":null,"api_server":null},"woyaola":null,"cnzz":null},"search_path":"/local-search.xml","include_content_in_search":true};
-
-    if (CONFIG.web_analytics.follow_dnt) {
-      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
-      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
-    }
-  </script>
-  <script  src="/js/utils.js" ></script>
-  <script  src="/js/color-schema.js" ></script>
-  
-
-
-  
-<meta name="generator" content="Hexo 7.2.0"><link rel="alternate" href="/atom.xml" title="P2Tree Home" type="application/atom+xml">
-</head>
-
-
-<body>
-  
-
-  <header>
-    
-
-<div class="header-inner" style="height: 70vh;">
-  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
-  <div class="container">
-    <a class="navbar-brand" href="/">
-      <strong>P2Tree Home</strong>
-    </a>
-
-    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
-            data-target="#navbarSupportedContent"
-            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <div class="animated-icon"><span></span><span></span><span></span></div>
-    </button>
-
-    <!-- Collapsible content -->
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ml-auto text-center">
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/" target="_self">
-                <i class="iconfont icon-home-fill"></i>
-                <span>Home</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/archives/" target="_self">
-                <i class="iconfont icon-archive-fill"></i>
-                <span>Archives</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/categories/" target="_self">
-                <i class="iconfont icon-category-fill"></i>
-                <span>Categories</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/tags/" target="_self">
-                <i class="iconfont icon-tags-fill"></i>
-                <span>Tags</span>
-              </a>
-            </li>
-          
-        
-          
-          
-          
-          
-            <li class="nav-item">
-              <a class="nav-link" href="/about/" target="_self">
-                <i class="iconfont icon-user-fill"></i>
-                <span>About</span>
-              </a>
-            </li>
-          
-        
-        
-          <li class="nav-item" id="search-btn">
-            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
-              <i class="iconfont icon-search"></i>
-            </a>
-          </li>
-          
-        
-        
-          <li class="nav-item" id="color-toggle-btn">
-            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
-              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
-            </a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-</nav>
-
-  
-
-<div id="banner" class="banner" parallax=true
-     style="background: url('/img/20210606/index.png') no-repeat center center; background-size: cover;">
-  <div class="full-bg-img">
-    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
-      <div class="banner-text text-center fade-in-up">
-        <div class="h2">
-          
-            <span id="subtitle" data-typed-text="LLVM 后端实践笔记 5：全局变量"></span>
-          
-        </div>
-
-        
-          
-  <div class="mt-3">
-    
-    
-      <span class="post-meta">
-        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
-        <time datetime="2021-06-06 21:38" pubdate>
-          June 6, 2021 pm
-        </time>
-      </span>
-    
-  </div>
-
-  <div class="mt-1">
-    
-      <span class="post-meta mr-2">
-        <i class="iconfont icon-chart"></i>
-        
-          3k words
-        
-      </span>
-    
-
-    
-      <span class="post-meta mr-2">
-        <i class="iconfont icon-clock-fill"></i>
-        
-        
-        
-          25 mins
-        
-      </span>
-    
-
-    
-    
-  </div>
-
-
-        
-      </div>
-
+<meta property="article:tag" content="LLVM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://p2tree.github.io/2021/06/06/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-5-%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: 'Copy Successful',
+    error: 'Copy Error',
+    noSupport: 'Browser Not Supported'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: 'Just now',
+    min: 'minutes ago',
+    hour: 'hours ago',
+    day: 'days ago',
+    month: 'months ago'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: 'Load More'
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'LLVM 后端实践笔记 5：全局变量',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-08-03 21:59:52'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
       
-    </div>
-  </div>
-</div>
-
-</div>
-
-  </header>
-
-  <main>
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
     
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
       
-
-<div class="container-fluid nopadding-x">
-  <div class="row nomargin-x">
-    <div class="side-col d-none d-lg-block col-lg-2">
-      
-
-    </div>
-
-    <div class="col-lg-8 nopadding-x-md">
-      <div class="container nopadding-x-md" id="board-ctn">
-        <div id="board">
-          <article class="post-content mx-auto">
-            <h1 id="seo-header">LLVM 后端实践笔记 5：全局变量</h1>
-            
-            
-              <div class="markdown-body">
-                
-                <p>之前的几章，只访问了局部变量，在这一章中，我们要处理全局变量的访问。全局变量的 DAG 翻译不同于之前的 DAG 翻译。它的 DAG 翻译，需要额外依据 <code>llc -relocation-model</code> 参数（指定重定位模式是静态重定位还是运行时重定位），在后端创建 IR DAG 节点，而其他的 DAG 只需根据输入文件来直接做 DAG 的翻译 （伪指令除外）。大家需要专注于如何在执行时创建 DAG 节点而增加的代码，以及如何在 td 文件中定义 Pat 结构。另外，全局变量的机器指令打印功能也需要完成。</p>
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.2.0"><link rel="alternate" href="/atom.xml" title="P2Tree Home" type="application/atom+xml">
+</head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">5</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg fixed" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="P2Tree Home"><img class="site-icon" src="/img/avatar.png"/><span class="site-name">P2Tree Home</span></a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> Home</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> Archives</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> Tags</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> Categories</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> About</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">LLVM 后端实践笔记 5：全局变量</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">Created</span><time class="post-meta-date-created" datetime="2021-06-06T13:38:10.000Z" title="Created 2021-06-06 21:38:10">2021-06-06</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">Updated</span><time class="post-meta-date-updated" datetime="2024-08-03T13:59:52.692Z" title="Updated 2024-08-03 21:59:52">2024-08-03</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/">软件开发</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="LLVM 后端实践笔记 5：全局变量"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">Post Views:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><p>之前的几章，只访问了局部变量，在这一章中，我们要处理全局变量的访问。全局变量的 DAG 翻译不同于之前的 DAG 翻译。它的 DAG 翻译，需要额外依据 <code>llc -relocation-model</code> 参数（指定重定位模式是静态重定位还是运行时重定位），在后端创建 IR DAG 节点，而其他的 DAG 只需根据输入文件来直接做 DAG 的翻译 （伪指令除外）。大家需要专注于如何在执行时创建 DAG 节点而增加的代码，以及如何在 td 文件中定义 Pat 结构。另外，全局变量的机器指令打印功能也需要完成。</p>
 <h2 id="5-1-全局变量编译选项"><a href="#5-1-全局变量编译选项" class="headerlink" title="5.1 全局变量编译选项"></a>5.1 全局变量编译选项</h2><p>和 Mips 相同，Cpu0 同时支持静态模式和 PIC 模式的全局变量重定位模式。这个选项通过 <code>-relocation-mode</code> 指定。另外，还区分两种不同的 layout，用来控制将数据放到 .data&#x2F;.bss 段还是 .sdata&#x2F;.sbss 段，后者使用 16 位地址寻址，寻址效率更高（需要指令数少），但寻址空间变小。这个选项通过 <code>-cpu0-use-small-section</code> 指定。</p>
 <p>两个选项组合成 4 种类型，用来指导生成 4 种不同的可执行文件：</p>
 <table>
@@ -323,12 +194,12 @@
 <li>地址计算：绝对地址</li>
 <li>合法化选择 DAG：</li>
 </ul>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">(add Cpu0ISD::Hi&lt;gI offset Hi16&gt;, Cpu0ISD::Lo&lt;gI offset Lo16&gt;)<br></code></pre></td></tr></table></figure>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(add Cpu0ISD::Hi&lt;gI offset Hi16&gt;, Cpu0ISD::Lo&lt;gI offset Lo16&gt;)</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>汇编：</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><code class="hljs asm">lui $2, %hi(gI);<br>ori $2, $2, %lo(gI);<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lui $2, %hi(gI);</span><br><span class="line">ori $2, $2, %lo(gI);</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>重定位阶段：链接阶段</li>
@@ -338,12 +209,12 @@
 <li>地址计算：<code>$gp + offset</code></li>
 <li>合法化选择 DAG：</li>
 </ul>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">(add register %GP, Cpu0ISD::GPRel&lt;gI offset&gt;)<br></code></pre></td></tr></table></figure>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(add register %GP, Cpu0ISD::GPRel&lt;gI offset&gt;)</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>汇编：</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">ori $2, $gp, %gp_rel(gI);<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ori $2, $gp, %gp_rel(gI);</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>重定位阶段：链接阶段</li>
@@ -353,12 +224,12 @@
 <li>地址计算：<code>$gp + offset</code></li>
 <li>合法化选择 DAG：</li>
 </ul>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">(load (Cpu0ISD::Wrapper register %GP, &lt;gI offset&gt;))<br></code></pre></td></tr></table></figure>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(load (Cpu0ISD::Wrapper register %GP, &lt;gI offset&gt;))</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>汇编：</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs asm">ld $2, %got(gI)($gp);<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ld $2, %got(gI)($gp);</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>重定位阶段：链接或加载阶段</li>
@@ -368,12 +239,12 @@
 <li>地址计算：<code>$gp + offset</code></li>
 <li>合法化选择 DAG：</li>
 </ul>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">(load EntryToken, (Cpu0ISD::Wrapper (add Cpu0ISD::Hi&lt;gI offset Hi16&gt;, Register %GP), Cpu0ISD::Lo&lt;gI offset Lo16&gt;))<br></code></pre></td></tr></table></figure>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">(load EntryToken, (Cpu0ISD::Wrapper (add Cpu0ISD::Hi&lt;gI offset Hi16&gt;, Register %GP), Cpu0ISD::Lo&lt;gI offset Lo16&gt;))</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>汇编：</li>
 </ul>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">lui $2, %got_hi(gI);<br>add $2, $2, $gp;<br>ld $2, %got_lo(gI)($2);<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lui $2, %got_hi(gI);</span><br><span class="line">add $2, $2, $gp;</span><br><span class="line">ld $2, %got_lo(gI)($2);</span><br></pre></td></tr></table></figure>
 
 <ul>
 <li>重定位阶段：链接或加载阶段</li>
@@ -391,59 +262,59 @@
 <h4 id="6-Cpu0ISelDAGToDAG-h-cpp"><a href="#6-Cpu0ISelDAGToDAG-h-cpp" class="headerlink" title="(6) Cpu0ISelDAGToDAG.h&#x2F;.cpp"></a>(6) Cpu0ISelDAGToDAG.h&#x2F;.cpp</h4><p>实现获取基地址的指令，也就是通过指令将 GOT 地址加载到寄存器。填充 Select 函数，对 <code>ISD::GLOBAL_OFFSET_TABLE</code> 做替换，将其更改为针对我们指定寄存器作为基地址寄存器的 Node。同时还填充了 SelectAddr 函数，对 PIC 模式，返回节点的操作数。</p>
 <h4 id="7-Cpu0InstrInfo-td"><a href="#7-Cpu0InstrInfo-td" class="headerlink" title="(7) Cpu0InstrInfo.td"></a>(7) Cpu0InstrInfo.td</h4><p>定义了 Cpu0Hi、Cpu0Lo、Cpu0GPRel、Cpu0Wrapper 几个 Node，被用来处理全局地址（注意与寄存器 Hi、Lo 的区分）。</p>
 <p>实现了几个 Pat，这种 td 结构指示在 lower DAG 时，将指定的 llvm node 下降为另一种机器相关的 DAG node。比如：</p>
-<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs text">def : Pat&lt;(Cpu0Hi tglobaladdr:$in), (LUi tglobaladdr:$in)&gt;;<br></code></pre></td></tr></table></figure>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">def : Pat&lt;(Cpu0Hi tglobaladdr:$in), (LUi tglobaladdr:$in)&gt;;</span><br></pre></td></tr></table></figure>
 
 <p>这表示将 Cpu0Hi 的 node 下降为 LUi 节点。</p>
 <h4 id="8-Cpu0AsmPrinter-cpp"><a href="#8-Cpu0AsmPrinter-cpp" class="headerlink" title="(8) Cpu0AsmPrinter.cpp"></a>(8) Cpu0AsmPrinter.cpp</h4><p>在 <code>EmitFunctionBodyStart()</code> 函数中增加了对 .cpload 的输出，.cpload 是一条伪指令，它用来标记一段伪代码，将会被展开成多条指令。另外，.set nomacro 用来判断汇编器的操作生成超过一种机器语言，并输出警告信息。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">.set     noreorder<br>.cpload  $6<br>.set     nomacro<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">.set     noreorder</span><br><span class="line">.cpload  $6</span><br><span class="line">.set     nomacro</span><br></pre></td></tr></table></figure>
 
 <p>伪指令展开是在 Cpu0MCInstLower.h 中完成的，<code>LowerCPLOAD()</code> 函数。</p>
 <h4 id="9-Cpu0MCInstLower-h-cpp"><a href="#9-Cpu0MCInstLower-h-cpp" class="headerlink" title="(9) Cpu0MCInstLower.h&#x2F;.cpp"></a>(9) Cpu0MCInstLower.h&#x2F;.cpp</h4><p>实现对 MCInst 指令的 lower，在 <code>LowerOperand()</code> 函数中，针对 MO_GlobalAddress 类型的操作数做特殊处理，实现 <code>LowerSymbolOperand()</code> 函数，也就是对符号操作数的处理，当处理全局变量时，能够返回一个符号表达式（比如 <code>%got_lo</code> 这种）。</p>
 <p>另外，实现了 <code>LowerCPLOAD()</code> 函数，该函数用来对伪指令 .cpload 进行展开，展开内容为：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">lui    $gp, %hi(_gp_disp)<br>addiu  $gp, $gp, %lo(_gp_disp)<br>addu   $gp, $gp, $t9<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lui    $gp, %hi(_gp_disp)</span><br><span class="line">addiu  $gp, $gp, %lo(_gp_disp)</span><br><span class="line">addu   $gp, $gp, $t9</span><br></pre></td></tr></table></figure>
 
 <p><code>_gp_disp</code> 是一个重定位符号，它的值是函数开头到 GOT 表的偏移，加载器在加载时填充这个值。展开的指令中，我们能看到，<code>$gp</code> 存放的就是 sdata 段的起始地址，而将 <code>$gp</code> 与 <code>$t9</code> 相加（<code>$t9</code> 用来保存函数调用的函数地址），就调整好了在某次函数调用时的 sdata 段数据的起始位置。<code>$gp</code> 是需要参与栈调整的，它是 callee saved 寄存器。</p>
 <h3 id="10-Cpu0MachineFunctionInfo-h-cpp"><a href="#10-Cpu0MachineFunctionInfo-h-cpp" class="headerlink" title="(10) Cpu0MachineFunctionInfo.h&#x2F;.cpp"></a>(10) Cpu0MachineFunctionInfo.h&#x2F;.cpp</h3><p>实现获取全局基地址寄存器的几个辅助函数。</p>
 <h2 id="5-3-检验成果"><a href="#5-3-检验成果" class="headerlink" title="5.3 检验成果"></a>5.3 检验成果</h2><p>使用的测试程序是 ch5.c：</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><code class="hljs c"><span class="hljs-type">int</span> gStart = <span class="hljs-number">3</span>;<br><span class="hljs-type">int</span> gI = <span class="hljs-number">100</span>;<br><span class="hljs-type">int</span> <span class="hljs-title function_">test_global</span><span class="hljs-params">()</span><br>&#123;<br>  <span class="hljs-type">int</span> c = <span class="hljs-number">0</span>;<br>  <br>  c = gI;<br>  <br>  <span class="hljs-keyword">return</span> c;<br>&#125;<br></code></pre></td></tr></table></figure>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> gStart = <span class="number">3</span>;</span><br><span class="line"><span class="type">int</span> gI = <span class="number">100</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">test_global</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">int</span> c = <span class="number">0</span>;</span><br><span class="line">  </span><br><span class="line">  c = gI;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>使用 clang 编译 LLVM 文件：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">build/bin/clang -target mips-unknown-linux-gnu -c ch5.c -emit-llvm -S -o ch5.ll<br></code></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">build/bin/clang -target mips-unknown-linux-gnu -c ch5.c -emit-llvm -S -o ch5.ll</span><br></pre></td></tr></table></figure>
 
 <h3 id="5-3-1-静态模式"><a href="#5-3-1-静态模式" class="headerlink" title="5.3.1 静态模式"></a>5.3.1 静态模式</h3><h4 id="1-存放在-data-段"><a href="#1-存放在-data-段" class="headerlink" title="(1) 存放在 data 段"></a>(1) 存放在 data 段</h4><p>使用 llc 编译汇编文件：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">build/bin/llc -march=cpu0 -relocation-model=static -cpu0-use-small-section=<span class="hljs-literal">false</span> -filetype=asm ch5.ll -o ch5.s<br></code></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">build/bin/llc -march=cpu0 -relocation-model=static -cpu0-use-small-section=<span class="literal">false</span> -filetype=asm ch5.ll -o ch5.s</span><br></pre></td></tr></table></figure>
 
 <p>生成的汇编文件中，比较关键的代码如下：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><code class="hljs asm">...<br>  lui $2, %hi(gI)<br>  ori $2, $2, %lo(gI)<br>  ld  $2, 0($2)<br>...<br>  .type        gStart,@object             # @gStart<br>  .data<br>  .globl       gStart<br>  .p2align     2<br>gStart:<br>  .4byte       3<br>  .size        gStart, 4<br>  <br>  .type        gI,@object                # @gI<br>  .globl       gI<br>  .p2align     2<br>gI:<br>  .4byte       100<br>  .size        gI, 4<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">  lui $2, %hi(gI)</span><br><span class="line">  ori $2, $2, %lo(gI)</span><br><span class="line">  ld  $2, 0($2)</span><br><span class="line">...</span><br><span class="line">  .type        gStart,@object             # @gStart</span><br><span class="line">  .data</span><br><span class="line">  .globl       gStart</span><br><span class="line">  .p2align     2</span><br><span class="line">gStart:</span><br><span class="line">  .4byte       3</span><br><span class="line">  .size        gStart, 4</span><br><span class="line">  </span><br><span class="line">  .type        gI,@object                # @gI</span><br><span class="line">  .globl       gI</span><br><span class="line">  .p2align     2</span><br><span class="line">gI:</span><br><span class="line">  .4byte       100</span><br><span class="line">  .size        gI, 4</span><br></pre></td></tr></table></figure>
 
 <p><code>lui</code> 指令将一个值的低 16 位放到一个寄存器的高 16 位，寄存器的低 16 位填 0。</p>
 <p>代码中，首先加载 <code>gI</code> 的高 16 位部分，放到 <code>$2</code> 中高 16 位，低 16 位填 0；然后将 <code>$2</code> 与 <code>gI</code> 的低 16 位做或运算，最后，通过 ld 指令，将 <code>$2</code> 指向的内容（此时 <code>$2</code> 保存的是指向 <code>gI</code> 的地址）取出来，放到 <code>$2</code> 中，标量数据偏移是 0。</p>
 <p>还注意到，<code>gStart</code> 和 <code>gI</code> 都存放在 .data 段。</p>
 <h4 id="2-存放在-sdata-段"><a href="#2-存放在-sdata-段" class="headerlink" title="(2) 存放在 sdata 段"></a>(2) 存放在 sdata 段</h4><p>然后，我们看一下存放到 sdata&#x2F;sbss 段的结果：</p>
 <p>使用 llc 编译：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">build/bin/llc -march=cpu0 -relocation-model=static -cpu0-use-small-section=<span class="hljs-literal">true</span> -filetype=asm ch5.ll -o ch5.s<br></code></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">build/bin/llc -march=cpu0 -relocation-model=static -cpu0-use-small-section=<span class="literal">true</span> -filetype=asm ch5.ll -o ch5.s</span><br></pre></td></tr></table></figure>
 
 <p>生成的汇编文件中：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><code class="hljs asm">...<br>  ori $2, $gp, %gp_rel(gI)<br>  ld  $2, 0($2)<br>...<br>  .type      gStart,@object               # @gStart<br>  .section   .sdata,&quot;aw&quot;,@progbits<br>  .globl     gStart<br>  .p2align   2<br>gStart:<br>  .4byte     3<br>  .size      gStart, 4<br>  .type      gI,@object                   # @gI<br>  .globl     gI<br>  .p2align   2<br>gI:<br>  .4byte     100<br>  .size      gI, 4<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">  ori $2, $gp, %gp_rel(gI)</span><br><span class="line">  ld  $2, 0($2)</span><br><span class="line">...</span><br><span class="line">  .type      gStart,@object               # @gStart</span><br><span class="line">  .section   .sdata,&quot;aw&quot;,@progbits</span><br><span class="line">  .globl     gStart</span><br><span class="line">  .p2align   2</span><br><span class="line">gStart:</span><br><span class="line">  .4byte     3</span><br><span class="line">  .size      gStart, 4</span><br><span class="line">  .type      gI,@object                   # @gI</span><br><span class="line">  .globl     gI</span><br><span class="line">  .p2align   2</span><br><span class="line">gI:</span><br><span class="line">  .4byte     100</span><br><span class="line">  .size      gI, 4</span><br></pre></td></tr></table></figure>
 
 <p>其中 <code>$gp</code> 保存了 .sdata 的起始绝对地址，在加载时赋值（此时 <code>$gp</code> 不能被当做普通寄存器分配），<code>gp_rel(gI)</code> 是计算 <code>gI</code> 相对于段起始的相对偏移，在链接时会计算，所以第一条指令结束时，<code>$2</code> 中就保存了 <code>gI</code> 的绝对地址。第二条指令做 <code>gI</code> 的取值操作。</p>
 <p>注意到，<code>gStart</code> 和 <code>gI</code> 都存放在 .sdata 段。因为 sdata 是自定义段，所以汇编选用了 .section 伪指令来描述。</p>
 <p>这种模式下，<code>$gp</code> 的内容是在链接阶段被赋值的， <code>gI</code> 相对于 .sdata 段的相对地址也能在链接时计算，并替换在 <code>%gp_rel(gI)</code> 的位置，所以整个重定位过程是静态完成的（运行开始时地址都已经固定好了）。</p>
 <h3 id="5-3-2-PIC-模式"><a href="#5-3-2-PIC-模式" class="headerlink" title="5.3.2 PIC 模式"></a>5.3.2 PIC 模式</h3><h4 id="1-存放在-data-段-1"><a href="#1-存放在-data-段-1" class="headerlink" title="(1) 存放在 data 段"></a>(1) 存放在 data 段</h4><p>使用 llc 编译：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">build/bin/llc -march=cpu0 -relocation-model=pic -cpu0-use-small-section=<span class="hljs-literal">false</span> -filetype=asm ch5.ll -o ch5.s<br></code></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">build/bin/llc -march=cpu0 -relocation-model=pic -cpu0-use-small-section=<span class="literal">false</span> -filetype=asm ch5.ll -o ch5.s</span><br></pre></td></tr></table></figure>
 
 <p>生成的汇编代码中：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><code class="hljs asm">...<br>  .set      noreorder<br>  .cpload   $t9<br>  .set      nomacro<br>...<br>  lui $2, %got_hi(gI)<br>  addu $2, $2, $gp<br>  ld $2, %got_lo(gI)($2)<br>  ld $2, 0($2)<br>...<br>  .type     gStart,@object              # @gStart<br>  .data<br>  .globl    gStart<br>  .p2align  2<br>.gStart:<br>  .4byte    3<br>  .size     gStart, 4<br>  <br>  .type     gI,@object                  # @gI<br>  .globl    gI<br>  .p2align  2<br>gI:<br>  .4byte    100<br>  .size     gI, 4<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">  .set      noreorder</span><br><span class="line">  .cpload   $t9</span><br><span class="line">  .set      nomacro</span><br><span class="line">...</span><br><span class="line">  lui $2, %got_hi(gI)</span><br><span class="line">  addu $2, $2, $gp</span><br><span class="line">  ld $2, %got_lo(gI)($2)</span><br><span class="line">  ld $2, 0($2)</span><br><span class="line">...</span><br><span class="line">  .type     gStart,@object              # @gStart</span><br><span class="line">  .data</span><br><span class="line">  .globl    gStart</span><br><span class="line">  .p2align  2</span><br><span class="line">.gStart:</span><br><span class="line">  .4byte    3</span><br><span class="line">  .size     gStart, 4</span><br><span class="line">  </span><br><span class="line">  .type     gI,@object                  # @gI</span><br><span class="line">  .globl    gI</span><br><span class="line">  .p2align  2</span><br><span class="line">gI:</span><br><span class="line">  .4byte    100</span><br><span class="line">  .size     gI, 4</span><br></pre></td></tr></table></figure>
 
 <p>由于全局数据放到了 data 段，所以 <code>$gp</code> 中保存了在这个函数中全局变量在 data 段的起始地址。通过 <code>%got_hi(gI)</code> 和 <code>%got_lo(gI)</code> 就可以获得全局变量的 GOT 偏移，进而得到它在运行时的地址。值得一提的是，这些汇编代码，都是在 td 文件中被定义如何展开的。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs asm">lui    $gp, %hi(_gp_disp)<br>addiu  $gp, $gp, %lo(_gp_disp)<br>addu   $gp, $gp, $t9<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">lui    $gp, %hi(_gp_disp)</span><br><span class="line">addiu  $gp, $gp, %lo(_gp_disp)</span><br><span class="line">addu   $gp, $gp, $t9</span><br></pre></td></tr></table></figure>
 
 <p>从而用来加载动态链接时的 data 段地址。详细说明见前边代码部分描述。</p>
 <h4 id="2-存放在-sdata-段-1"><a href="#2-存放在-sdata-段-1" class="headerlink" title="(2) 存放在 sdata 段"></a>(2) 存放在 sdata 段</h4><p>使用 llc 编译：</p>
-<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs bash">build/bin/llc -march=cpu0 -relocation-model=pic -cpu0-use-small-section=<span class="hljs-literal">true</span> -filetype=asm ch5.ll -o ch5.s<br></code></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">build/bin/llc -march=cpu0 -relocation-model=pic -cpu0-use-small-section=<span class="literal">true</span> -filetype=asm ch5.ll -o ch5.s</span><br></pre></td></tr></table></figure>
 
 <p>生成的汇编代码中：</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><code class="hljs asm">...<br>  .set      noreorder<br>  .cpload   $6<br>  .set      nomacro<br>...<br>  ld $2, %got(gI)($gp)<br>  ld $2, 0($2)<br>...<br>  .type     gStart,@object               # @gStart<br>  .sdata    gStart,&quot;aw&quot;,@progbits<br>  .globl    gStart<br>  .p2align  2<br>gStart:<br>  .4byte    3<br>  .size     gStart, 4<br>  <br>  .type     gI,@object                   # @gI<br>  .globl    gI<br>  .p2align  2<br>gI:<br>  .4byte    100<br>  .size     gI, 4<br></code></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">...</span><br><span class="line">  .set      noreorder</span><br><span class="line">  .cpload   $6</span><br><span class="line">  .set      nomacro</span><br><span class="line">...</span><br><span class="line">  ld $2, %got(gI)($gp)</span><br><span class="line">  ld $2, 0($2)</span><br><span class="line">...</span><br><span class="line">  .type     gStart,@object               # @gStart</span><br><span class="line">  .sdata    gStart,&quot;aw&quot;,@progbits</span><br><span class="line">  .globl    gStart</span><br><span class="line">  .p2align  2</span><br><span class="line">gStart:</span><br><span class="line">  .4byte    3</span><br><span class="line">  .size     gStart, 4</span><br><span class="line">  </span><br><span class="line">  .type     gI,@object                   # @gI</span><br><span class="line">  .globl    gI</span><br><span class="line">  .p2align  2</span><br><span class="line">gI:</span><br><span class="line">  .4byte    100</span><br><span class="line">  .size     gI, 4</span><br></pre></td></tr></table></figure>
 
 <p>Cpu0 使用 .cpload 和 <code>ld $2, %got(gI)($gp)</code> 指令来访问全局变量。此时，我们无法假设 <code>$gp</code> 总是能指向 sdata 的开头（因为<code>$gp</code> 会被栈调整时修改）。</p>
 <p>注意到，数据存放在 sdata 段。</p>
@@ -451,439 +322,5 @@
 <p>后端在 Cpu0TargetLowering 构造函数中通过 <code>setOperationAction(ISD::GlobalAddress, VT::i32, Custom)</code> 来指定将全局变量设置为自定义操作。有多种不同类型的操作动作，除了 Custom，比如 Promote 和 Expand，但只有 Custom 需要开发自定义的代码来处理。</p>
 <p>需要说明的一点是，通过指定将全局变量保存在 sdata&#x2F;sbss 段的行为，可能在链接阶段发现 sdata 段数据溢出的问题。当这种问题发生时，链接器就需要指出这个问题，并要求用户选择是否调整为 data 段存放全局数据。一个使用原则是，尽可能把小且频繁使用的变量放到 sdata 段。</p>
 <hr>
-<div class="note note-info">
-            <p>本文同步发布在知乎账号下：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/378338026">LLVM 后端实践笔记 5：全局变量 - 知乎 (zhihu.com)</a></p>
-          </div>
-                
-              </div>
-            
-            <hr/>
-            <div>
-              <div class="post-metas my-3">
-  
-    <div class="post-meta mr-3 d-flex align-items-center">
-      <i class="iconfont icon-category"></i>
-      
-
-<span class="category-chains">
-  
-  
-    
-      <span class="category-chain">
-        
-  <a href="/categories/%E8%BD%AF%E4%BB%B6%E5%BC%80%E5%8F%91/" class="category-chain-item">软件开发</a>
-  
-  
-
-      </span>
-    
-  
-</span>
-
-    </div>
-  
-  
-    <div class="post-meta">
-      <i class="iconfont icon-tags"></i>
-      
-        <a href="/tags/LLVM/" class="print-no-link">#LLVM</a>
-      
-        <a href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/" class="print-no-link">#编译器</a>
-      
-    </div>
-  
-</div>
-
-
-              
-  
-
-  <div class="license-box my-3">
-    <div class="license-title">
-      <div>LLVM 后端实践笔记 5：全局变量</div>
-      <div>http://p2tree.github.io/2021/06/06/LLVM后端实践笔记-5-全局变量/</div>
-    </div>
-    <div class="license-meta">
-      
-        <div class="license-meta-item">
-          <div>Author</div>
-          <div>P2Tree</div>
-        </div>
-      
-      
-        <div class="license-meta-item license-meta-date">
-          <div>Posted on</div>
-          <div>June 6, 2021</div>
-        </div>
-      
-      
-      
-        <div class="license-meta-item">
-          <div>Licensed under</div>
-          <div>
-            
-              
-              
-                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
-                  <span class="hint--top hint--rounded" aria-label="BY - Attribution">
-                    <i class="iconfont icon-cc-by"></i>
-                  </span>
-                </a>
-              
-            
-          </div>
-        </div>
-      
-    </div>
-    <div class="license-icon iconfont"></div>
-  </div>
-
-
-
-              
-                <div class="post-prevnext my-3">
-                  <article class="post-prev col-6">
-                    
-                    
-                      <a href="/2021/06/19/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-6-%E6%9B%B4%E5%A4%9A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" title="LLVM 后端实践笔记 6：更多数据类型">
-                        <i class="iconfont icon-arrowleft"></i>
-                        <span class="hidden-mobile">LLVM 后端实践笔记 6：更多数据类型</span>
-                        <span class="visible-mobile">Previous</span>
-                      </a>
-                    
-                  </article>
-                  <article class="post-next col-6">
-                    
-                    
-                      <a href="/2021/05/18/%E5%8F%91%E6%8E%98%E6%88%98%E7%95%A5%E6%80%A7%E5%89%AF%E4%B8%9A/" title="发掘战略性副业">
-                        <span class="hidden-mobile">发掘战略性副业</span>
-                        <span class="visible-mobile">Next</span>
-                        <i class="iconfont icon-arrowright"></i>
-                      </a>
-                    
-                  </article>
-                </div>
-              
-            </div>
-
-            
-  
-  
-    <article id="comments" lazyload>
-      
-  <script type="text/javascript">
-    Fluid.utils.loadComments('#comments', function() {
-      var light = 'github-light';
-      var dark = 'github-dark';
-      var schema = document.documentElement.getAttribute('data-user-color-scheme');
-      if (schema === 'dark') {
-        schema = dark;
-      } else {
-        schema = light;
-      }
-      window.UtterancesThemeLight = light;
-      window.UtterancesThemeDark = dark;
-      var s = document.createElement('script');
-      s.setAttribute('src', 'https://utteranc.es/client.js');
-      s.setAttribute('repo', 'p2tree/p2tree.github.io');
-      s.setAttribute('issue-term', 'pathname');
-      
-      s.setAttribute('label', 'utterances');
-      
-      s.setAttribute('theme', schema);
-      s.setAttribute('crossorigin', 'anonymous');
-      document.getElementById('comments').appendChild(s);
-    })
-  </script>
-  <noscript>Please enable JavaScript to view the comments</noscript>
-
-
-    </article>
-  
-
-
-          </article>
-        </div>
-      </div>
-    </div>
-
-    <div class="side-col d-none d-lg-block col-lg-2">
-      
-  <aside class="sidebar" style="margin-left: -1rem">
-    <div id="toc">
-  <p class="toc-header">
-    <i class="iconfont icon-list"></i>
-    <span>Table of Contents</span>
-  </p>
-  <div class="toc-body" id="toc-body"></div>
-</div>
-
-
-
-  </aside>
-
-
-    </div>
-  </div>
-</div>
-
-
-
-
-
-  
-
-
-
-  
-
-
-
-  
-
-
-
-  
-
-
-
-  
-
-
-
-
-
-
-
-    
-
-    
-      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
-        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
-      </a>
-    
-
-    
-      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
-     aria-hidden="true">
-  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header text-center">
-        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
-        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body mx-3">
-        <div class="md-form mb-5">
-          <input type="text" id="local-search-input" class="form-control validate">
-          <label data-error="x" data-success="v" for="local-search-input">Keyword</label>
-        </div>
-        <div class="list-group" id="local-search-result"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-    
-
-    
-  </main>
-
-  <footer>
-    <div class="footer-inner">
-  
-    <div class="footer-content">
-       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
-    </div>
-  
-  
-    <div class="statistics">
-  
-  
-
-  
-    
-      <span id="busuanzi_container_site_pv" style="display: none">
-        Views: 
-        <span id="busuanzi_value_site_pv"></span>
-        
-      </span>
-    
-    
-      <span id="busuanzi_container_site_uv" style="display: none">
-        Visitors: 
-        <span id="busuanzi_value_site_uv"></span>
-        
-      </span>
-    
-    
-
-  
-
-</div>
-
-  
-  
-</div>
-
-  </footer>
-
-  <!-- Scripts -->
-  
-  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
-  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
-
-  <script>
-    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
-    NProgress.start()
-    window.addEventListener('load', function() {
-      NProgress.done();
-    })
-  </script>
-
-
-<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
-<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
-<script  src="/js/events.js" ></script>
-<script  src="/js/plugins.js" ></script>
-
-
-  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
-  <script>
-    (function (window, document) {
-      var typing = Fluid.plugins.typing;
-      var subtitle = document.getElementById('subtitle');
-      if (!subtitle || !typing) {
-        return;
-      }
-      var text = subtitle.getAttribute('data-typed-text');
-      
-        typing(text);
-      
-    })(window, document);
-  </script>
-
-
-
-
-  
-    <script  src="/js/img-lazyload.js" ></script>
-  
-
-
-
-
-  
-<script>
-  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
-    var toc = jQuery('#toc');
-    if (toc.length === 0 || !window.tocbot) { return; }
-    var boardCtn = jQuery('#board-ctn');
-    var boardTop = boardCtn.offset().top;
-
-    window.tocbot.init(Object.assign({
-      tocSelector     : '#toc-body',
-      contentSelector : '.markdown-body',
-      linkClass       : 'tocbot-link',
-      activeLinkClass : 'tocbot-active-link',
-      listClass       : 'tocbot-list',
-      isCollapsedClass: 'tocbot-is-collapsed',
-      collapsibleClass: 'tocbot-is-collapsible',
-      scrollSmooth    : true,
-      includeTitleTags: true,
-      headingsOffset  : -boardTop,
-    }, CONFIG.toc));
-    if (toc.find('.toc-list-item').length > 0) {
-      toc.css('visibility', 'visible');
-    }
-
-    Fluid.events.registerRefreshCallback(function() {
-      if ('tocbot' in window) {
-        tocbot.refresh();
-        var toc = jQuery('#toc');
-        if (toc.length === 0 || !tocbot) {
-          return;
-        }
-        if (toc.find('.toc-list-item').length > 0) {
-          toc.css('visibility', 'visible');
-        }
-      }
-    });
-  });
-</script>
-
-
-  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
-
-  <script>Fluid.plugins.codeWidget();</script>
-
-
-  
-<script>
-  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
-    window.anchors.options = {
-      placement: CONFIG.anchorjs.placement,
-      visible  : CONFIG.anchorjs.visible
-    };
-    if (CONFIG.anchorjs.icon) {
-      window.anchors.options.icon = CONFIG.anchorjs.icon;
-    }
-    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
-    var res = [];
-    for (var item of el) {
-      res.push('.markdown-body > ' + item.trim());
-    }
-    if (CONFIG.anchorjs.placement === 'left') {
-      window.anchors.options.class = 'anchorjs-link-left';
-    }
-    window.anchors.add(res.join(', '));
-
-    Fluid.events.registerRefreshCallback(function() {
-      if ('anchors' in window) {
-        anchors.removeAll();
-        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
-        var res = [];
-        for (var item of el) {
-          res.push('.markdown-body > ' + item.trim());
-        }
-        if (CONFIG.anchorjs.placement === 'left') {
-          anchors.options.class = 'anchorjs-link-left';
-        }
-        anchors.add(res.join(', '));
-      }
-    });
-  });
-</script>
-
-
-  
-<script>
-  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
-    Fluid.plugins.fancyBox();
-  });
-</script>
-
-
-  <script>Fluid.plugins.imageCaption();</script>
-
-  <script  src="/js/local-search.js" ></script>
-
-  <script defer src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" ></script>
-
-
-
-
-
-<!-- 主题的启动项，将它保持在最底部 -->
-<!-- the boot of the theme, keep it at the bottom -->
-<script  src="/js/boot.js" ></script>
-
-
-  
-
-  <noscript>
-    <div class="noscript-warning">Blog works best with JavaScript enabled</div>
-  </noscript>
-</body>
-</html>
+<div class="note info flat"><p>本文同步发布在知乎账号下：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/378338026">LLVM 后端实践笔记 5：全局变量 - 知乎 (zhihu.com)</a></p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>Author: </span><span class="post-copyright-info"><a href="http://p2tree.github.io">P2Tree</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>Link: </span><span class="post-copyright-info"><a href="http://p2tree.github.io/2021/06/06/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-5-%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F/">http://p2tree.github.io/2021/06/06/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-5-%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>Copyright Notice: </span><span class="post-copyright-info">All articles in this blog are licensed under <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> unless stating additionally.</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/">编译器</a><a class="post-meta__tags" href="/tags/LLVM/">LLVM</a></div><div class="post_share"><div class="social-share" data-image="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/2021/06/19/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-6-%E6%9B%B4%E5%A4%9A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" title="LLVM 后端实践笔记 6：更多数据类型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">Previous</div><div class="prev_info">LLVM 后端实践笔记 6：更多数据类型</div></div></a></div><div class="next-post pull-right"><a href="/2021/05/18/%E5%8F%91%E6%8E%98%E6%88%98%E7%95%A5%E6%80%A7%E5%89%AF%E4%B8%9A/" title="发掘战略性副业"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">Next</div><div class="next_info">发掘战略性副业</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>Related Articles</span></div><div class="relatedPosts-list"><div><a href="/2021/08/07/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-10-%E6%B1%87%E7%BC%96/" title="LLVM 后端实践笔记 10：汇编"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-08-07</div><div class="title">LLVM 后端实践笔记 10：汇编</div></div></a></div><div><a href="/2021/06/19/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-6-%E6%9B%B4%E5%A4%9A%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" title="LLVM 后端实践笔记 6：更多数据类型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-06-19</div><div class="title">LLVM 后端实践笔记 6：更多数据类型</div></div></a></div><div><a href="/2021/07/31/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-9-ELF%E6%96%87%E4%BB%B6%E6%94%AF%E6%8C%81/" title="LLVM 后端实践笔记 9：ELF文件支持"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-31</div><div class="title">LLVM 后端实践笔记 9：ELF文件支持</div></div></a></div><div><a href="/2021/07/04/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-7-%E6%8E%A7%E5%88%B6%E6%B5%81/" title="LLVM 后端实践笔记 7：控制流"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-04</div><div class="title">LLVM 后端实践笔记 7：控制流</div></div></a></div><div><a href="/2021/07/24/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-8-%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8/" title="LLVM 后端实践笔记 8：函数调用"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-07-24</div><div class="title">LLVM 后端实践笔记 8：函数调用</div></div></a></div><div><a href="/2021/09/10/LLVM%E5%90%8E%E7%AB%AF%E5%AE%9E%E8%B7%B5%E7%AC%94%E8%AE%B0-%E9%99%84%E5%BD%95A-%E4%BD%BF%E7%94%A8Simulator%E9%AA%8C%E8%AF%81%E7%BC%96%E8%AF%91%E5%99%A8/" title="LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2021-09-10</div><div class="title">LLVM 后端实践笔记 附录A：使用 Simulator 验证编译器</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://i.loli.net/2021/02/24/5O1day2nriDzjSu.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">P2Tree</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">Articles</div><div class="length-num">17</div></a><a href="/tags/"><div class="headline">Tags</div><div class="length-num">17</div></a><a href="/categories/"><div class="headline">Categories</div><div class="length-num">5</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/xxxxxx"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>Announcement</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>Contents</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#5-1-%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E7%BC%96%E8%AF%91%E9%80%89%E9%A1%B9"><span class="toc-number">1.</span> <span class="toc-text">5.1 全局变量编译选项</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-1-%E9%9D%99%E6%80%81%E6%A8%A1%E5%BC%8F%EF%BC%8C%E4%B8%8D%E4%BD%BF%E7%94%A8-small-section"><span class="toc-number">1.1.</span> <span class="toc-text">5.1.1 静态模式，不使用 small section</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-2-%E9%9D%99%E6%80%81%E6%A8%A1%E5%BC%8F%EF%BC%8C%E4%BD%BF%E7%94%A8-small-section"><span class="toc-number">1.2.</span> <span class="toc-text">5.1.2 静态模式，使用 small section</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-3-PIC-%E6%A8%A1%E5%BC%8F%EF%BC%8C%E4%B8%8D%E4%BD%BF%E7%94%A8-small-section"><span class="toc-number">1.3.</span> <span class="toc-text">5.1.3 PIC 模式，不使用 small section</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-4-PIC-%E6%A8%A1%E5%BC%8F%EF%BC%8C%E4%BD%BF%E7%94%A8-small-section"><span class="toc-number">1.4.</span> <span class="toc-text">5.1.4 PIC 模式，使用 small section</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-2-%E4%BB%A3%E7%A0%81%E4%BF%AE%E6%94%B9"><span class="toc-number">2.</span> <span class="toc-text">5.2 代码修改</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-1-%E6%96%87%E4%BB%B6%E6%96%B0%E5%A2%9E"><span class="toc-number">2.1.</span> <span class="toc-text">5.2.1 文件新增</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-Cpu0Subtarget-h-cpp"><span class="toc-number">2.1.1.</span> <span class="toc-text">(1) Cpu0Subtarget.h&#x2F;.cpp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-Cpu0BaseInfo-h"><span class="toc-number">2.1.2.</span> <span class="toc-text">(2) Cpu0BaseInfo.h</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#3-Cpu0TargetObjectFile-h-cpp"><span class="toc-number">2.1.3.</span> <span class="toc-text">(3) Cpu0TargetObjectFile.h&#x2F;.cpp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#4-Cpu0RegisterInfo-cpp"><span class="toc-number">2.1.4.</span> <span class="toc-text">(4) Cpu0RegisterInfo.cpp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-Cpu0ISelLowering-h-cpp"><span class="toc-number">2.1.5.</span> <span class="toc-text">(5) Cpu0ISelLowering.h&#x2F;.cpp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#6-Cpu0ISelDAGToDAG-h-cpp"><span class="toc-number">2.1.6.</span> <span class="toc-text">(6) Cpu0ISelDAGToDAG.h&#x2F;.cpp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#7-Cpu0InstrInfo-td"><span class="toc-number">2.1.7.</span> <span class="toc-text">(7) Cpu0InstrInfo.td</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#8-Cpu0AsmPrinter-cpp"><span class="toc-number">2.1.8.</span> <span class="toc-text">(8) Cpu0AsmPrinter.cpp</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#9-Cpu0MCInstLower-h-cpp"><span class="toc-number">2.1.9.</span> <span class="toc-text">(9) Cpu0MCInstLower.h&#x2F;.cpp</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-Cpu0MachineFunctionInfo-h-cpp"><span class="toc-number">2.2.</span> <span class="toc-text">(10) Cpu0MachineFunctionInfo.h&#x2F;.cpp</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-3-%E6%A3%80%E9%AA%8C%E6%88%90%E6%9E%9C"><span class="toc-number">3.</span> <span class="toc-text">5.3 检验成果</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-1-%E9%9D%99%E6%80%81%E6%A8%A1%E5%BC%8F"><span class="toc-number">3.1.</span> <span class="toc-text">5.3.1 静态模式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%AD%98%E6%94%BE%E5%9C%A8-data-%E6%AE%B5"><span class="toc-number">3.1.1.</span> <span class="toc-text">(1) 存放在 data 段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%AD%98%E6%94%BE%E5%9C%A8-sdata-%E6%AE%B5"><span class="toc-number">3.1.2.</span> <span class="toc-text">(2) 存放在 sdata 段</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-2-PIC-%E6%A8%A1%E5%BC%8F"><span class="toc-number">3.2.</span> <span class="toc-text">5.3.2 PIC 模式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#1-%E5%AD%98%E6%94%BE%E5%9C%A8-data-%E6%AE%B5-1"><span class="toc-number">3.2.1.</span> <span class="toc-text">(1) 存放在 data 段</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#2-%E5%AD%98%E6%94%BE%E5%9C%A8-sdata-%E6%AE%B5-1"><span class="toc-number">3.2.2.</span> <span class="toc-text">(2) 存放在 sdata 段</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#5-4-%E6%80%BB%E7%BB%93"><span class="toc-number">4.</span> <span class="toc-text">5.4 总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>Recent Post</span></div><div class="aside-list"><div class="aside-list-item"><div class="content"><a class="title" href="/2024/07/02/%E5%9C%A8%E9%A3%9E%E9%80%9D%E7%9A%84%E6%97%B6%E5%85%89%E4%B8%AD%EF%BC%8C%E4%BB%96%E4%BB%AC%E8%AE%A9%E6%9C%AA%E6%9D%A5%E6%9C%89%E6%89%80%E6%9C%9F%E5%BE%85/" title="在飞逝的时光中，他们让未来有所期待">在飞逝的时光中，他们让未来有所期待</a><time datetime="2024-07-02T05:06:24.000Z" title="Created 2024-07-02 13:06:24">2024-07-02</time></div></div><div class="aside-list-item"><div class="content"><a class="title" href="/2024/06/19/%E6%89%91%E5%85%8B%E6%98%86%E7%89%B9%E7%89%8C%E7%8E%A9%E6%B3%95%E8%AE%BE%E8%AE%A1/" title="扑克昆特牌玩法设计">扑克昆特牌玩法设计</a><time datetime="2024-06-19T02:00:00.000Z" title="Created 2024-06-19 10:00:00">2024-06-19</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/06/16/%E5%A4%84%E7%90%86%E5%99%A8barrier%E8%A1%8C%E4%B8%BA%E7%9A%84%E4%BB%BF%E7%9C%9F%E5%AE%9E%E7%8E%B0/" title="处理器 barrier 行为的仿真实现">处理器 barrier 行为的仿真实现</a><time datetime="2024-06-16T02:00:00.000Z" title="Created 2024-06-16 10:00:00">2024-06-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/10/14/Vim%20%E9%AB%98%E6%95%88%E7%BC%96%E8%BE%91%E6%8A%80%E5%B7%A7/" title="Vim 高效编辑技巧">Vim 高效编辑技巧</a><time datetime="2023-10-14T02:00:00.000Z" title="Created 2023-10-14 10:00:00">2023-10-14</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/08/14/LLVM%E9%A3%8E%E6%A0%BC%E7%9A%84RTTI/" title="LLVM 风格的 RTTI">LLVM 风格的 RTTI</a><time datetime="2023-08-14T06:47:40.000Z" title="Created 2023-08-14 14:47:40">2023-08-14</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By P2Tree</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="Read Mode"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="Toggle Between Light And Dark Mode"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="Toggle between Single-column and Double-column"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="Setting"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="Table Of Contents"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="Back To Top"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div></body></html>

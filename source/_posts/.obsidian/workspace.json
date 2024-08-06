@@ -1,0 +1,175 @@
+{
+  "main": {
+    "id": "8c454ba997b33c75",
+    "type": "split",
+    "children": [
+      {
+        "id": "145d853d461fb362",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "0ccfe7f0a6bc47a3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "为什么终端开发离不开Tmux.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "f1a16f2659ea289f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "在飞逝的时光中，他们让未来有所期待.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "6acc1f4b3ae3ad8c",
+    "type": "split",
+    "children": [
+      {
+        "id": "260fe0afdaf51183",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "e338b0981b539b74",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "4b3af58d4c392a34",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "a282c38c823582d4",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "d4f76af9685097d9",
+    "type": "split",
+    "children": [
+      {
+        "id": "3b3fe82c7bfb7d15",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "122a472f8c9856c3",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "在飞逝的时光中，他们让未来有所期待.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "6ba5cef502d7d150",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "在飞逝的时光中，他们让未来有所期待.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "df8bbb8844f1d0c9",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "66e414531ee44319",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "在飞逝的时光中，他们让未来有所期待.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false
+    }
+  },
+  "active": "f1a16f2659ea289f",
+  "lastOpenFiles": [
+    "未命名.md",
+    "在飞逝的时光中，他们让未来有所期待.md",
+    "为什么终端开发离不开Tmux.md",
+    "扑克昆特牌玩法设计.md",
+    "LLVM风格的RTTI.md",
+    "Vim 高效编辑技巧.md",
+    "处理器barrier行为的仿真实现.md",
+    "Pasted image 20240623110259.png",
+    "img1.png",
+    "扑克昆特玩法设计.md"
+  ]
+}

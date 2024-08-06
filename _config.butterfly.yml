@@ -3,7 +3,7 @@
 # --------------------------------------
 
 nav:
-  logo: /img/avatar.png # image
+  logo: # image
   display_title: true
   fixed: true # fixed navigation bar
 
@@ -762,7 +762,7 @@ subtitle:
   # https://github.com/mattboldt/typed.js/#customization
   typed_option:
     startDelay: 300
-    typeSpeed: 120
+    typeSpeed: 100
     backSpeed: 20
   loop: true
   # source 調用第三方服務

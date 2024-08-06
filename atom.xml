@@ -165,11 +165,11 @@
     <category term="软件工具" scheme="http://p2tree.github.io/categories/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E5%85%B7/"/>
     
     
-    <category term="Vim" scheme="http://p2tree.github.io/tags/Vim/"/>
+    <category term="终端开发" scheme="http://p2tree.github.io/tags/%E7%BB%88%E7%AB%AF%E5%BC%80%E5%8F%91/"/>
     
     <category term="软件工具" scheme="http://p2tree.github.io/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E5%85%B7/"/>
     
-    <category term="终端开发" scheme="http://p2tree.github.io/tags/%E7%BB%88%E7%AB%AF%E5%BC%80%E5%8F%91/"/>
+    <category term="Vim" scheme="http://p2tree.github.io/tags/Vim/"/>
     
     <category term="高效编程" scheme="http://p2tree.github.io/tags/%E9%AB%98%E6%95%88%E7%BC%96%E7%A8%8B/"/>
     
@@ -197,9 +197,9 @@
     
     <category term="编译器" scheme="http://p2tree.github.io/tags/%E7%BC%96%E8%AF%91%E5%99%A8/"/>
     
-    <category term="LLVM" scheme="http://p2tree.github.io/tags/LLVM/"/>
-    
     <category term="CPP" scheme="http://p2tree.github.io/tags/CPP/"/>
+    
+    <category term="LLVM" scheme="http://p2tree.github.io/tags/LLVM/"/>
     
   </entry>
   
@@ -223,13 +223,13 @@
     <category term="软件工具" scheme="http://p2tree.github.io/categories/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E5%85%B7/"/>
     
     
-    <category term="软件工具" scheme="http://p2tree.github.io/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E5%85%B7/"/>
+    <category term="Tmux" scheme="http://p2tree.github.io/tags/Tmux/"/>
     
     <category term="终端开发" scheme="http://p2tree.github.io/tags/%E7%BB%88%E7%AB%AF%E5%BC%80%E5%8F%91/"/>
     
-    <category term="Tmux" scheme="http://p2tree.github.io/tags/Tmux/"/>
-    
     <category term="Terminal" scheme="http://p2tree.github.io/tags/Terminal/"/>
+    
+    <category term="软件工具" scheme="http://p2tree.github.io/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E5%85%B7/"/>
     
   </entry>
   

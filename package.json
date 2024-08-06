@@ -29,5 +29,8 @@
     "hexo-theme-landscape": "^1.0.0",
     "hexo-theme-resume": "^2.0.0",
     "hexo-wordcount": "^6.0.1"
+  },
+  "devDependencies": {
+    "hexo-generator-sitemap": "^3.0.1"
   }
 }

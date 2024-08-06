@@ -4,9 +4,11 @@ date: 2021-08-07 23:15:39
 tags:
   - 编译器
   - LLVM
+categories: 软件开发
 index_img: /img/20210807/index_small.jpg
 banner_img: /img/20210807/index.jpg
-categories: 软件开发
+cover: /img/20210807/index_small.jpg
+top_img: /img/20210807/index.jpg
 ---
 ## 10 汇编
 

@@ -4,9 +4,11 @@ date: 2021-07-31 23:04:26
 tags:
   - 编译器
   - LLVM
+categories: 软件开发
 index_img: /img/20210731/index_small.png
 banner_img: /img/20210731/index.png
-categories: 软件开发
+cover: /img/20210731/index_small.png
+top_img: /img/20210731/index.png
 ---
 虽然我们的 Cpu0 模拟器只需要输入 hex 格式的编码文件就可以执行，但这一章依然介绍如何生成 ELF 文件，ELF 文件是一种通用的可执行文件、目标文件和共享库与核心转储文件标准，最早是由 System V 应用二进制接口发布，之后成为一种标准，并很快被类 Unix 操作系统接受。几乎所有支持编译的后端平台都需要生成一种可执行文件格式来执行代码，现在主流的三种可执行文件分别是 Linux 系统及裸机系统支持的 ELF 文件、Windows 系统支持的 COFF 文件以及 MacOS 系统支持的 Mach-O 文件格式。我们让 Cpu0 后端生成 ELF 文件格式。
 

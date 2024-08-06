@@ -4,9 +4,11 @@ date: 2022-12-03 17:29:47
 tags:
   - LLVM
   - 编译器
+categories: 软件开发
 index_img: /img/20221203/index_small.jpg
 banner_img: /img/20221203/index.jpg
-categories: 软件开发
+cover: /img/20221203/index_small.jpg
+top_img: /img/20221203/index.jpg
 ---
 这是一篇**译文**，主要介绍了 LLVM 中的 New Pass Manager 原文链接：
 

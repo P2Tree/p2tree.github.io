@@ -7,6 +7,8 @@ tags:
 categories: 软件开发
 index_img: /img/20211129/index_small.png
 banner_img: /img/20211129/index.png
+cover: /img/20211129/index_small.png
+top_img: /img/20211129/index.png
 ---
 > 本文首先介绍了标准库和运行时库在 GCC 和 clang 上的关系和区别。之后介绍各自编译器软件中对原子库的支持情况。 本文讨论的 GCC 的版本是 7.5.0，clang 的版本是 12.0.0。 本文提到的 GCC 和 clang 分别是对应的编译器系统，并不是 gcc/Clang 编译器前端或编译器驱动软件。
 

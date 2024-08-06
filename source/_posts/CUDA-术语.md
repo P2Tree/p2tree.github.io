@@ -5,9 +5,11 @@ tags:
   - 并发编程
   - 体系结构
   - CUDA
+categories: 软件开发
 index_img: /img/20220828/index_small.jpg
 banner_img: /img/20220828/index.jpg
-categories: 软件开发
+cover: /img/20220828/index_small.jpg
+top_img: /img/20220828/index.jpg
 ---
 学习 CUDA 最重要的首先是理解 GPU 和 CUDA 中的各种术语，在不同的平台上，相同或类似的概念却有着不同的称呼，典型的就是在 CUDA 和 OpenCL 的系统中叫法之差异，以及和通用体系结构教材中的称呼。GPU 学习曲线陡峭的一个原因就是术语使用上还未完全统一。
 
@@ -87,6 +89,6 @@ GPU 上存在两种不同的调度：
 SIMD 车道寄存器是车道内的硬件资源，所以从 SIMD 指令处理器（SP）角度看，会拥有极其大量的寄存器数量（Fermi 架构中拥有 32768 个 32 位的寄存器）。
 
 ---
-{% note info %}
+{% note info simple %}
 本文同步发布在知乎账号下：[CUDA 术语 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/558728158)
 {% endnote %}

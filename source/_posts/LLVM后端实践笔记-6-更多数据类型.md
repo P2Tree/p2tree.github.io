@@ -4,9 +4,11 @@ date: 2021-06-19 17:15:17
 tags:
   - 编译器
   - LLVM
+categories: 软件开发
 index_img: /img/20210619/index_small.png
 banner_img: /img/20210619/index.png
-categories: 软件开发
+cover: /img/20210619/index_small.png
+top_img: /img/20210619/index.png
 ---
 之前的章节只实现了 int 和 32 位的 long 类型数据，这一章会新增一些更复杂的数据类型，比如 char, bool, short, long long，还会增加结构体，浮点，和向量类型。这一部分内容相对比较简单，其实这些类型也都是标准语言都支持的类型，所以 LLVM 自身已经实现了很大一部分功能，只要我们的后端不那么奇怪，就很容易填补缺失的内容。
 

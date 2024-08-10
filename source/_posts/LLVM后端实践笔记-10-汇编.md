@@ -1,14 +1,15 @@
 ---
 title: LLVM 后端实践笔记 10：汇编
-date: 2021-08-07 23:15:39
 tags:
   - 编译器
   - LLVM
 categories: 软件开发
-index_img: /img/20210807/index_small.jpg
-banner_img: /img/20210807/index.jpg
-cover: /img/20210807/index_small.jpg
-top_img: /img/20210807/index.jpg
+index_img: /img/20210807/index.webp
+banner_img: /img/20210807/index.webp
+cover: /img/20210807/index.webp
+top_img: /img/20210807/index.webp
+abbrlink: 419cdb7c
+date: 2021-08-07 23:15:39
 ---
 ## 10 汇编
 

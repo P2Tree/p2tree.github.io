@@ -1,14 +1,15 @@
 ---
 title: LLVM 后端实践笔记 7：控制流
-date: 2021-07-04 22:09:23
 tags:
   - 编译器
   - LLVM
 categories: 软件开发
-index_img: /img/20210704/index_small.png
-banner_img: /img/20210704/index.png
-cover: /img/20210704/index_small.png
-top_img: /img/20210704/index.png
+index_img: /img/20210704/index.webp
+banner_img: /img/20210704/index.webp
+cover: /img/20210704/index.webp
+top_img: /img/20210704/index.webp
+abbrlink: 8908debe
+date: 2021-07-04 22:09:23
 ---
 这一章会介绍与控制流有关的功能实现，比如 if、else、while 和 for 等，还会介绍如何将控制流的 IR 表示转换为机器指令；之后会引入几个后端优化，处理一些跳转需求引入的问题，同时来说明如何编写后端优化的 pass。在条件指令小节中，会介绍 LLVM IR 中的特殊指令 select 和 select_cc，以及如何处理这种指令，从而来支持更细节的控制流支持实现。
 

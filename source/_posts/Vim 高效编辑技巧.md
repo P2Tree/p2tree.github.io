@@ -1,16 +1,17 @@
 ---
 title: Vim 高效编辑技巧
-date: 2023-10-14 10:00:00
 tags:
   - Vim
   - 软件工具
   - 终端开发
   - 高效编程
 categories: 软件工具
-index_img: /img/20231014/index_small.jpg
-banner_img: /img/20231014/index.jpg
-cover: /img/20231014/index_small.jpg
-top_img: /img/20231014/index.jpg
+index_img: /img/20231014/index.webp
+banner_img: /img/20231014/index.webp
+cover: /img/20231014/index.webp
+top_img: /img/20231014/index.webp
+abbrlink: 73fc32a
+date: 2023-10-14 10:00:00
 ---
 ## 开头叨叨
 

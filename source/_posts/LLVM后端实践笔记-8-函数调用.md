@@ -1,14 +1,15 @@
 ---
 title: LLVM 后端实践笔记 8：函数调用
-date: 2021-07-24 23:01:27
 tags:
   - 编译器
   - LLVM
 categories: 软件开发
-index_img: /img/20210724/index_small.png
-banner_img: /img/20210724/index.png
-cover: /img/20210724/index_small.png
-top_img: /img/20210724/index.png
+index_img: /img/20210724/index.webp
+banner_img: /img/20210724/index.webp
+cover: /img/20210724/index.webp
+top_img: /img/20210724/index.webp
+abbrlink: 17d95923
+date: 2021-07-24 23:01:27
 ---
 在这一章，我们会在 Cpu0 后端中增加对子过程/函数调用的翻译功能，会添加大量代码。这一章首先会介绍 Mips 的栈帧结构，我们的 Cpu0 也会借用 Mips 的栈帧设计，大多数 RISC 机器的栈帧设计都是类似的，如果你对这块的背景知识有困惑，需要先查阅其他书籍，比如《深入理解计算机系统》这类计算机体系结构的书。
 

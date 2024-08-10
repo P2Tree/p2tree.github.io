@@ -34,10 +34,14 @@ code_word_wrap: true
 # formal:
 #   icon: link || the description || color
 social:
-  fab fa-github: https://github.com/p2tree || Github || '#24292e'
-  fas fa-envelope: mailto:p2tree@163.com || Email || '#4a7dbe'
-  fab fa-zhihu: https://zhihu.com/people/p2tree || Zhihu || '#548EFF'
-  fab fa-weixin: /2024/08/05/微信公众号-P2Tree/ || Weixin || '#04CF66'
+  # iconfont icon-github: https://github.com/p2tree || Github || '#24292e'
+  # iconfont icon-mail: mailto:p2tree@163.com || Email || '#4a7dbe'
+  # iconfont icon-zhihu: https://zhihu.com/people/p2tree || Zhihu || '#548EFF'
+  # iconfont icon-wechat: /2024/08/05/微信公众号-P2Tree/ || Weixin || '#04CF66'
+  iconfont icon-github: https://github.com/p2tree || Github
+  iconfont icon-mail: mailto:p2tree@163.com || Email
+  iconfont icon-zhihu: https://zhihu.com/people/p2tree || Zhihu 
+  iconfont icon-wechat: /2024/08/05/微信公众号-P2Tree/ || Weixin
 
   # fab fa-github: https://github.com/xxxxx || Github || '#24292e'
   # fas fa-envelope: mailto:xxxxxx@gmail.com || Email || '#4a7dbe'
@@ -46,42 +50,45 @@ social:
 # --------------------------------------
 
 # Favicon（網站圖標）
-favicon: /img/avatar.png
+favicon: /img/avatar.webp
 
 # Avatar (頭像)
 avatar:
-  img: /img/avatar_origin.png
+  img: /img/avatar.webp
   effect: false
 
 # Disable all banner image
 disable_top_img: false
 
 # The banner image of home page
-index_img: /img/default.jpg
+# (主页的横幅图片)
+index_img: /img/default.webp
 
 # If the banner of page not setting, it will show the top_img
-default_top_img: /img/default.jpg
+# (默认索引图片)
+default_top_img: /img/default.webp
 
 # The banner image of archive page
-archive_img: /img/default.jpg
+# (归档页横幅图片)
+archive_img: /img/default.webp
 
 # If the banner of tag page not setting, it will show the top_img
 # note: tag page, not tags page (子標籤頁面的 top_img)
-tag_img: /img/default.jpg
+tag_img: /img/default.webp
 
 # The banner image of tag page
 # format:
 #  - tag name: xxxxx
-tag_per_img: /img/default.jpg
+tag_per_img: /img/default.webp
 
 # If the banner of category page not setting, it will show the top_img
 # note: category page, not categories page (子分類頁面的 top_img)
-category_img: /img/default.jpg
+category_img: /img/default.webp
 
 # The banner image of category page
 # format:
 #  - category name: xxxxx
-category_per_img: /img/default.jpg
+category_per_img: /img/default.webp
 
 cover:
   # display the cover or not (是否顯示文章封面)
@@ -92,7 +99,7 @@ cover:
   # left/right/both
   position: left
   # When cover is not set, the default cover is displayed (當沒有設置cover時，默認的封面顯示)
-  default_cover: /img/default.jpg
+  default_cover: /img/default.webp
     # - https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg
 
 # Replace Broken Images (替換無法顯示的圖片)
@@ -103,8 +110,8 @@ error_img:
 # A simple 404 page
 error_404:
   enable: true
-  subtitle: 'Oops! It seems the page has gone on an unexpected journey'
-  background: /img/default.jpg
+  subtitle: 'Oops! It seems the page has gone on an unexpected journey.'
+  background: /img/default.webp
 
 post_meta:
   page: # Home Page
@@ -232,15 +239,15 @@ aside:
     category: true
   card_author:
     enable: true
-    description:
+    description: 基础软件研发工程师
     button:
-      enable: true
+      enable: false
       icon: 
       text: Follow Me
       link: https://zhihu.com/people/p2tree
   card_announcement:
     enable: true
-    content: 欢迎来访问我的博客
+    content: 网站正在搭建中，About 页有我的介绍，欢迎留言
   card_recent_post:
     enable: true
     limit: 5 # if set 0 will show all
@@ -923,7 +930,7 @@ css_prefix: true
 # 插入代码到头部 </head> 之前 和 底部 </body> 之前
 inject:
   head:
-    # - <link rel="stylesheet" href="/xxx.css">
+    - <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4649427_dkojwrlglfd.css">
   bottom:
     # - <script src="xxxx"></script>
 

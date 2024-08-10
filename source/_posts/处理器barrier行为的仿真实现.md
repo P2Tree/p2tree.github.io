@@ -1,16 +1,17 @@
 ---
 title: 处理器 barrier 行为的仿真实现
-date: 2024-06-16 10:00:00
 tags:
   - 体系结构
   - 并发编程
   - 仿真
   - CPP
 categories: 软件开发
-index_img: /img/20240616/index_small.jpg
-banner_img: /img/20240616/index.jpg
-cover: /img/20240616/index_small.jpg
-top_img: /img/20240616/index.jpg
+index_img: /img/20240616/index.webp
+banner_img: /img/20240616/index.webp
+cover: /img/20240616/index.webp
+top_img: /img/20240616/index.webp
+abbrlink: 29efb39b
+date: 2024-06-16 10:00:00
 ---
 
 ## 开头叨叨

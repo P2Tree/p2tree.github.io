@@ -1,15 +1,16 @@
 ---
 title: CUDA 术语
-date: 2022-08-28 23:16:07
 tags:
   - 并发编程
   - 体系结构
   - CUDA
 categories: 软件开发
-index_img: /img/20220828/index_small.jpg
-banner_img: /img/20220828/index.jpg
-cover: /img/20220828/index_small.jpg
-top_img: /img/20220828/index.jpg
+index_img: /img/20220828/index.webp
+banner_img: /img/20220828/index.webp
+cover: /img/20220828/index.webp
+top_img: /img/20220828/index.webp
+abbrlink: 350eef5c
+date: 2022-08-28 23:16:07
 ---
 学习 CUDA 最重要的首先是理解 GPU 和 CUDA 中的各种术语，在不同的平台上，相同或类似的概念却有着不同的称呼，典型的就是在 CUDA 和 OpenCL 的系统中叫法之差异，以及和通用体系结构教材中的称呼。GPU 学习曲线陡峭的一个原因就是术语使用上还未完全统一。
 

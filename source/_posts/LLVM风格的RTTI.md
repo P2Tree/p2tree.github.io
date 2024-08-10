@@ -1,15 +1,16 @@
 ---
 title: LLVM 风格的 RTTI
-date: 2023-08-14 14:47:40
 tags:
   - CPP
   - LLVM
   - 编译器
 categories: 软件开发
-index_img: /img/20230814/index_small.jpg
-banner_img: /img/20230814/index.jpg
-cover: /img/20230814/index_small.jpg
-top_img: /img/20230814/index.jpg
+index_img: /img/20230814/index.webp
+banner_img: /img/20230814/index.webp
+cover: /img/20230814/index.webp
+top_img: /img/20230814/index.webp
+abbrlink: 801cd0f2
+date: 2023-08-14 14:47:40
 ---
 ## 开头叨叨
 

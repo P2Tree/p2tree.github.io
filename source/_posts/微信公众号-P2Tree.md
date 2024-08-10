@@ -1,11 +1,12 @@
 ---
 title: 微信公众号 P2Tree
+cover: /img/20240805/wechat_logo.webp
+top_img: /img/20240805/wechat_logo.webp
+index_img: /img/20240805/wechat_logo.webp
+banner_img: /img/20240805/wechat_logo.webp
+abbrlink: e8d522db
 date: 2024-08-05 22:50:32
-tags: 
-cover: /img/wechat_logo.jpg
-top_img: /img/wechat_logo.jpg
-index_img: /img/wechat_logo.jpg
-banner_img: /img/wechat_logo.jpg
+tags:
 ---
 我自己维护着一个微信公众号，公众号名字是 P2Tree。
 
@@ -15,4 +16,4 @@ banner_img: /img/wechat_logo.jpg
 
 公众号的文章也会同步发布在博客上。欢迎通过下边二维码关注，也可搜索 P2Tree，握握手～
 
-![公众号 P2Tree](/img/WechatIMG111.jpg)
+![公众号 P2Tree](/img/20240805/WechatIMG111.webp)

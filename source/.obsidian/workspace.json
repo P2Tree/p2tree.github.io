@@ -1,0 +1,235 @@
+{
+  "main": {
+    "id": "a85f3a1a5cfe4457",
+    "type": "split",
+    "children": [
+      {
+        "id": "db97e0b74edc166f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "43c70b97bb30988c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "_posts/在飞逝的时光中，他们让未来有所期待.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "f96d1358dda72287",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "icost 试用记录.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "b9b18776fb85a1a0",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "_posts/GCC和Clang的原子库支持.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "401c16d675958e75",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "_posts/LLVM后端实践笔记-1-新后端初始化和软件编译.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ],
+        "currentTab": 3
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "46ea7fff59c1f27f",
+    "type": "split",
+    "children": [
+      {
+        "id": "1a704cf812edfa7f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3df898134cdedaf4",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "0d7027b43f4d93a4",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "cfe99594b3273002",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "cb3ecd7f58a1ece4",
+    "type": "split",
+    "children": [
+      {
+        "id": "a8c9b5c4db265dc8",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "37b1558d7effa3e4",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "_posts/LLVM后端实践笔记-1-新后端初始化和软件编译.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "3cdcb7b6d3cad109",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "_posts/LLVM后端实践笔记-1-新后端初始化和软件编译.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "dca188fce814abe5",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "b801b48032acd39b",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "_posts/LLVM后端实践笔记-1-新后端初始化和软件编译.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:打开快速切换": false,
+      "graph:查看关系图谱": false,
+      "canvas:新建白板": false,
+      "daily-notes:打开/创建今天的日记": false,
+      "templates:插入模板": false,
+      "command-palette:打开命令面板": false
+    }
+  },
+  "active": "401c16d675958e75",
+  "lastOpenFiles": [
+    "img/20210224/index.webp",
+    "img/20210224/index.png",
+    "img/20210224",
+    "_posts/LLVM后端实践笔记-附录A-使用Simulator验证编译器.md",
+    "_posts/LLVM后端实践笔记-1-新后端初始化和软件编译.md",
+    "_posts/LLVM后端实践笔记-2-后端结构.md",
+    "_posts/雨幕下的城市映像.md",
+    "img/20240810/index.webp",
+    "img/20240810/index.jpeg",
+    "img/20240810/WechatIMG141.jpeg",
+    "img/20240810/WechatIMG140.jpg",
+    "img/20240810/WechatIMG140.jpeg",
+    "img/20240810",
+    "img/20210313/index.webp",
+    "img/20210313/index.png",
+    "img/20210313",
+    "_posts/LLVM后端实践笔记-5-全局变量.md",
+    "_posts/LLVM后端实践笔记-3-算术和逻辑指令.md",
+    "img/20210405/index.webp",
+    "img/20210405/index.png",
+    "img/20210405",
+    "_posts/LLVM后端实践笔记-4-生成目标文件.md",
+    "_posts/发掘战略性副业.md",
+    "_posts/寻找生活的意义，就是意义所在.md",
+    "_posts/微信公众号-P2Tree.md",
+    "img/20240805",
+    "_posts/在飞逝的时光中，他们让未来有所期待.md",
+    "_posts/扑克昆特牌玩法设计.md",
+    "_posts/处理器barrier行为的仿真实现.md",
+    "_posts/Vim 高效编辑技巧.md",
+    "_posts/LLVM风格的RTTI.md",
+    "_posts/为什么终端开发离不开Tmux.md",
+    "_posts/LLVM New Pass Manager.md",
+    "_posts/CUDA-术语.md",
+    "_posts/GCC和Clang的原子库支持.md",
+    "_posts/LLVM后端实践笔记-10-汇编.md",
+    "_posts/LLVM后端实践笔记-9-ELF文件支持.md",
+    "_posts/LLVM后端实践笔记-8-函数调用.md",
+    "_posts/LLVM后端实践笔记-7-控制流.md",
+    "_posts/LLVM后端实践笔记-6-更多数据类型.md",
+    "img/20210511",
+    "img/20240806",
+    "css/pace-theme-minimal.css",
+    "css",
+    "about/index.md",
+    "categories"
+  ]
+}

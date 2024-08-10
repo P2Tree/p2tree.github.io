@@ -1,14 +1,15 @@
 ---
 title: LLVM 后端实践笔记 5：全局变量
-date: 2021-06-06 21:38:10
 tags:
   - 编译器
   - LLVM
 categories: 软件开发
-index_img: /img/20210606/index_small.png
-banner_img: /img/20210606/index.png
-cover: /img/20210606/index_small.png
-top_img: /img/20210606/index.png
+index_img: /img/20210606/index.webp
+banner_img: /img/20210606/index.webp
+cover: /img/20210606/index.webp
+top_img: /img/20210606/index.webp
+abbrlink: bd2628c8
+date: 2021-06-06 21:38:10
 ---
 之前的几章，只访问了局部变量，在这一章中，我们要处理全局变量的访问。全局变量的 DAG 翻译不同于之前的 DAG 翻译。它的 DAG 翻译，需要额外依据 `llc -relocation-model` 参数（指定重定位模式是静态重定位还是运行时重定位），在后端创建 IR DAG 节点，而其他的 DAG 只需根据输入文件来直接做 DAG 的翻译 （伪指令除外）。大家需要专注于如何在执行时创建 DAG 节点而增加的代码，以及如何在 td 文件中定义 Pat 结构。另外，全局变量的机器指令打印功能也需要完成。
 

@@ -61,7 +61,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "_posts/LLVM后端实践笔记-3-算术和逻辑指令.md",
+                "file": "about/index.md",
                 "mode": "source",
                 "source": false
               }
@@ -134,7 +134,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "_posts/LLVM后端实践笔记-3-算术和逻辑指令.md",
+                "file": "about/index.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -151,7 +151,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "_posts/LLVM后端实践笔记-3-算术和逻辑指令.md",
+                "file": "about/index.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -174,7 +174,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "_posts/LLVM后端实践笔记-3-算术和逻辑指令.md"
+                "file": "about/index.md"
               }
             }
           }
@@ -198,8 +198,10 @@
   },
   "active": "03e3cd9bfeef22d1",
   "lastOpenFiles": [
-    "_posts/LLVM后端实践笔记-0-序.md",
+    "_posts/博客搭建笔记.md",
+    "_posts/LLVM后端实践笔记-1-新后端初始化和软件编译.md",
     "_posts/LLVM后端实践笔记-3-算术和逻辑指令.md",
+    "_posts/LLVM后端实践笔记-0-序.md",
     "_posts/LLVM后端实践笔记-附录A-使用Simulator验证编译器.md",
     "_posts/LLVM后端实践笔记-10-汇编.md",
     "_posts/LLVM后端实践笔记-9-ELF文件支持.md",
@@ -208,7 +210,6 @@
     "_posts/LLVM后端实践笔记-6-更多数据类型.md",
     "_posts/LLVM后端实践笔记-5-全局变量.md",
     "_posts/LLVM后端实践笔记-4-生成目标文件.md",
-    "_posts/LLVM后端实践笔记-1-新后端初始化和软件编译.md",
     "_posts/LLVM后端实践笔记-2-后端结构.md",
     "_posts/LLVM New Pass Manager.md",
     "_posts/LLVM-目标无关代码生成器（第六章）.md",
@@ -216,7 +217,6 @@
     "img/20201209/index.webp.crdownload",
     "img/20201209",
     "_posts/LLVM风格的RTTI.md",
-    "_posts/博客搭建笔记.md",
     "link/icons/vercel.svg",
     "link/icons/vercel.ico",
     "css/profile.css",

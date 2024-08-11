@@ -9,6 +9,7 @@ categories: 软件开发
 cover: /img/20210222/index.webp
 swiper_index: "2"
 description: LLVM 后端学习的系列教程，这是第一集，必读起跑线
+series: LLVM后端实践笔记
 ---
 ## 0.1 动机
 

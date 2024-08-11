@@ -11,9 +11,13 @@ cover: /img/20210910/index.webp
 top_img: /img/20210910/index.webp
 abbrlink: 96dd94da
 date: 2021-09-10 17:12:50
+series: LLVM后端实践笔记
 ---
 最近家里事情比较多，拖了一段时间。这个笔记已经基本完成了，还剩下最后一章，使用 simulator 来验证我们开发的编译器，我将其放到附录里，是因为它不属于开发工作，只是辅助工具。我们的 Simulator 实现了 Cpu0 的指令功能，从而可以将 hex 格式的代码文件在之上运行，并能在终端中查看运行结果。
 
+{% series %}
+
+---
 ### A.1 运行 Simulator
 
 ### A.1.1 编译 Simulator

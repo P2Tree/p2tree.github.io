@@ -3,6 +3,7 @@ title: LLVM New Pass Manager
 tags:
   - LLVM
   - 编译器
+  - 译文
 categories: 软件开发
 index_img: /img/20221203/index.webp
 banner_img: /img/20221203/index.webp
@@ -11,11 +12,9 @@ top_img: /img/20221203/index.webp
 abbrlink: ab589331
 date: 2022-12-03 17:29:47
 ---
-这是一篇**译文**，主要介绍了 LLVM 中的 New Pass Manager 原文链接：
-
-https://blog.llvm.org/posts/2021-03-26-the-new-pass-manager/
-
-by Arthur Eubanks（Mar 26, 2021）
+>这是一篇**译文**，主要介绍了 LLVM 中的 New Pass Manager 原文链接：
+>https://blog.llvm.org/posts/2021-03-26-the-new-pass-manager/
+>by Arthur Eubanks（Mar 26, 2021）
 
 ## Pass Manager 的介绍
 

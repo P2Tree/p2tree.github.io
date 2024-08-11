@@ -7,9 +7,13 @@ tags:
   - LLVM
 categories: 软件开发
 cover: /img/20210224/index.webp
+series: LLVM后端实践笔记
 ---
 这一章介绍 Cpu0 的硬件配置，以及简单介绍 LLVM 代码的结构和编译方法。然后，我们会搭建起后端的框架，并能让 LLVM build 通过，通过完成一些后端注册的操作，可以让 llc 识别到我们新后端的存在。
 
+{% series %}
+
+---
 ## 1.1 Cpu0 处理器架构介绍
 
 **注意：公开的 Cpu0 的设计会发生变化，本节描述仅服务于本教程使用。Cpu0 架构是基于 Mips 的一种简化设计，可以参考 Mips 的架构细节来完善 Cpu0。**

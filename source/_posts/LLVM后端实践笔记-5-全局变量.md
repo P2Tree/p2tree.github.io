@@ -10,9 +10,13 @@ cover: /img/20210606/index.webp
 top_img: /img/20210606/index.webp
 abbrlink: bd2628c8
 date: 2021-06-06 21:38:10
+series: LLVM后端实践笔记
 ---
 之前的几章，只访问了局部变量，在这一章中，我们要处理全局变量的访问。全局变量的 DAG 翻译不同于之前的 DAG 翻译。它的 DAG 翻译，需要额外依据 `llc -relocation-model` 参数（指定重定位模式是静态重定位还是运行时重定位），在后端创建 IR DAG 节点，而其他的 DAG 只需根据输入文件来直接做 DAG 的翻译 （伪指令除外）。大家需要专注于如何在执行时创建 DAG 节点而增加的代码，以及如何在 td 文件中定义 Pat 结构。另外，全局变量的机器指令打印功能也需要完成。
 
+{% series %}
+
+---
 ## 5.1 全局变量编译选项
 
 和 Mips 相同，Cpu0 同时支持静态模式和 PIC 模式的全局变量重定位模式。这个选项通过 `-relocation-mode` 指定。另外，还区分两种不同的 layout，用来控制将数据放到 .data/.bss 段还是 .sdata/.sbss 段，后者使用 16 位地址寻址，寻址效率更高（需要指令数少），但寻址空间变小。这个选项通过 `-cpu0-use-small-section` 指定。

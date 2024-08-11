@@ -10,11 +10,13 @@ cover: /img/20210807/index.webp
 top_img: /img/20210807/index.webp
 abbrlink: 419cdb7c
 date: 2021-08-07 23:15:39
+series: LLVM后端实践笔记
 ---
-## 10 汇编
-
 这一章，我们来添加 Cpu0 的汇编功能，这包括独立汇编器和 C 语言内联汇编特性两个部分。
 
+{% series %}
+
+---
 ## 10.1 汇编器
 
 独立汇编器可以理解为依赖于 LLVM 后端提供的接口实现的一个独立软件，因为 LLVM 和 gcc 在这个地方的实现逻辑不一样。

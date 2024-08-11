@@ -4,12 +4,12 @@
 
 # Site
 title: P2Tree Home
-subtitle: ''
-description: ''
-keywords:
+subtitle:
+description:
+keywords: P2Tree,P2TreeHome,'P2Tree Home',Blog,技术分享,个人主页
 author: P2Tree
 language: zh-CN
-timezone: ''
+timezone: ""
 
 # URL
 ## Set your site url here. For example, if you use GitHub Page, set url as 'https://username.github.io/project'
@@ -37,7 +37,7 @@ titlecase: false # Transform title into titlecase
 external_link:
   enable: true # Open external links in new tab
   field: site # Apply to the whole site
-  exclude: ''
+  exclude: ""
 filename_case: 0
 render_drafts: false
 post_asset_folder: false
@@ -47,20 +47,20 @@ syntax_highlighter: highlight.js
 highlight:
   line_number: true
   auto_detect: false
-  tab_replace: ''
+  tab_replace: ""
   wrap: true
   hljs: false
 prismjs:
   preprocess: true
   line_number: true
-  tab_replace: ''
+  tab_replace: ""
 
 # Home page setting
 # path: Root path for your blogs index page. (default = '')
 # per_page: Posts displayed per page. (0 = disable pagination)
 # order_by: Posts order. (Order by date descending by default)
 index_generator:
-  path: ''
+  path: ""
   per_page: 10
   order_by: -date
 
@@ -80,7 +80,7 @@ meta_generator: true
 date_format: YYYY-MM-DD
 time_format: HH:mm:ss
 ## updated_option supports 'mtime', 'date', 'empty'
-updated_option: 'mtime'
+updated_option: "mtime"
 
 # Pagination
 ## Set per_page to 0 to disable pagination
@@ -125,7 +125,7 @@ html_minifier:
 #   exclude:
 #     - '*.min.js'
 # image_minifier:
-#   enable: true 
+#   enable: true
 #   interlaced: false
 #   multipass: false
 #   optimizationLevel: 2
@@ -134,15 +134,22 @@ html_minifier:
 
 # abbrlink (hexo-abbrlink)
 abbrlink:
-  alg: crc32      #support crc16(default) and crc32 进制
-  rep: hex        #support dec(default) and hex  算法
-  drafts: false   #(true)Process draft,(false)Do not process draft. false(default) 
+  alg: crc32 #support crc16(default) and crc32 进制
+  rep: hex #support dec(default) and hex  算法
+  drafts: false #(true)Process draft,(false)Do not process draft. false(default)
   ## Generate categories from directory-tree
   ## depth: the max_depth of directory-tree you want to generate, should > 0
   auto_category:
-    enable: true  #true(default)
-    depth:        #3(default)
-    over_write: false 
+    enable: true #true(default)
+    depth: #3(default)
+    over_write: false
   auto_title: false #enable auto title, it can auto fill the title by path
   auto_date: false #enable auto date, it can auto fill the date by time today
   force: false #enable force mode,in this mode, the plugin will ignore the cache, and calc the abbrlink for every post even it already had abbrlink.
+
+# feed (hexo-generator-feed)
+feed:
+  enable: true
+  type: atom
+  path: atom.xml
+  limit: 20

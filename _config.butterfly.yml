@@ -15,9 +15,9 @@ menu:
     Tags: /tags/ || fas fa-tags
     Categories: /categories/ || fas fa-folder-open
   Library||fas fa-heartbeat:
-    Games: https://quirky-olivine-7e6.notion.site/My-Games-Collection-a82b7f1e22b44e5fb7e207e521279a31 || fas fa-gamepad 
-    Books: https://quirky-olivine-7e6.notion.site/My-Book-Tracker-3ee78866f1274e869d48fe75bfec23e7 || fas fa-book-open 
-  # Link: /link/ || fas fa-link
+    Games: https://quirky-olivine-7e6.notion.site/My-Games-Collection-a82b7f1e22b44e5fb7e207e521279a31 || fas fa-gamepad
+    Books: https://quirky-olivine-7e6.notion.site/My-Book-Tracker-3ee78866f1274e869d48fe75bfec23e7 || fas fa-book-open
+  Link: /link/ || fas fa-link
   About: /about/ || fas fa-heart
 
 # Code Blocks (代碼相關)
@@ -28,20 +28,17 @@ highlight_copy: true # copy button
 highlight_lang: true # show the code language
 highlight_shrink: false # true: shrink the code blocks / false: expand the code blocks | none: expand code blocks and hide the button
 highlight_height_limit: false # unit: px
-code_word_wrap: true 
+code_word_wrap: true
 
 # Social Settings (社交圖標設置)
 # formal:
 #   icon: link || the description || color
 social:
-  # iconfont icon-github: https://github.com/p2tree || Github || '#24292e'
-  # iconfont icon-mail: mailto:p2tree@163.com || Email || '#4a7dbe'
-  # iconfont icon-zhihu: https://zhihu.com/people/p2tree || Zhihu || '#548EFF'
-  # iconfont icon-wechat: /2024/08/05/微信公众号-P2Tree/ || Weixin || '#04CF66'
   iconfont icon-github: https://github.com/p2tree || Github
   iconfont icon-mail: mailto:p2tree@163.com || Email
-  iconfont icon-zhihu: https://zhihu.com/people/p2tree || Zhihu 
+  iconfont icon-zhihu: https://zhihu.com/people/p2tree || Zhihu
   iconfont icon-wechat: /2024/08/05/微信公众号-P2Tree/ || Weixin
+  iconfont icon-feed: /atom.xml || Feed
 
   # fab fa-github: https://github.com/xxxxx || Github || '#24292e'
   # fas fa-envelope: mailto:xxxxxx@gmail.com || Email || '#4a7dbe'
@@ -99,7 +96,8 @@ cover:
   # left/right/both
   position: left
   # When cover is not set, the default cover is displayed (當沒有設置cover時，默認的封面顯示)
-  default_cover: /img/default.webp
+  default_cover:
+    /img/default.webp
     # - https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg
 
 # Replace Broken Images (替換無法顯示的圖片)
@@ -110,7 +108,7 @@ error_img:
 # A simple 404 page
 error_404:
   enable: true
-  subtitle: 'Oops! It seems the page has gone on an unexpected journey.'
+  subtitle: "Oops! It seems the page has gone on an unexpected journey."
   background: /img/default.webp
 
 post_meta:
@@ -222,7 +220,7 @@ footer:
     enable: true
     since: 2018
   custom_text:
-  copyright: true # Copyright of theme and framework
+  copyright: false # Copyright of theme and framework
 
 # aside (側邊欄)
 # --------------------------------------
@@ -242,7 +240,7 @@ aside:
     description: 基础软件研发工程师
     button:
       enable: false
-      icon: 
+      icon:
       text: Follow Me
       link: https://zhihu.com/people/p2tree
   card_announcement:
@@ -280,7 +278,7 @@ aside:
   card_post_series:
     enable: true
     series_title: false # The title shows the series name
-    orderBy: 'date' # Order by title or date
+    orderBy: "date" # Order by title or date
     order: -1 # Sort of order. 1, asc for ascending; -1, desc for descending
 
 # busuanzi count for PV / UV in site
@@ -317,9 +315,9 @@ translate:
   # Time delay
   translateDelay: 0
   # The text of the button when the language is Simplified Chinese
-  msgToTraditionalChinese: '繁'
+  msgToTraditionalChinese: "繁"
   # The text of the button when the language is Traditional Chinese
-  msgToSimplifiedChinese: '簡'
+  msgToSimplifiedChinese: "簡"
 
 # Read Mode (閲讀模式)
 readmode: true
@@ -345,9 +343,9 @@ rightside_scroll_percent: true
 # Choose: readmode,translate,darkmode,hideAside,toc,chat,comment
 # Don't repeat 不要重複
 rightside_item_order:
-  enable: false
+  enable: true
   hide: # readmode,translate,darkmode,hideAside
-  show: # toc,chat,comment
+  show: darkmode,readmode,hideAside # toc,chat,comment
 
 # Math (數學)
 # --------------------------------------
@@ -701,7 +699,7 @@ canvas_fluttering_ribbon:
 # https://github.com/hustcc/canvas-nest.js
 canvas_nest:
   enable: false
-  color: '0,0,255' #color of lines, default: '0,0,0'; RGB values: (R,G,B).(note: use ',' to separate.)
+  color: "0,0,255" #color of lines, default: '0,0,0'; RGB values: (R,G,B).(note: use ',' to separate.)
   opacity: 0.7 # the opacity of line (0~1), default: 0.5.
   zIndex: -1 # z-index property of the background, default: -1.
   count: 99 # the number of lines, default: 99.
@@ -780,7 +778,7 @@ subtitle:
   # subtitle 會先顯示 source , 再顯示 sub 的內容
   source: false
   # 如果關閉打字效果，subtitle 只會顯示 sub 的第一行文字
-  sub: 
+  sub:
     - Each success only buys an admission ticket to a more difficult problem
 
 # Loading Animation (加載動畫)
@@ -820,7 +818,7 @@ fancybox: true
 # series (系列文章)
 series:
   enable: true
-  orderBy: 'title' # Order by title or date
+  orderBy: "title" # Order by title or date
   order: 1 # Sort of order. 1, asc for ascending; -1, desc for descending
   number: true
 
@@ -853,6 +851,71 @@ note:
   # Offset also applied to label tag variables. This option can work with disabled note tag.
   light_bg_offset: 0
 
+# hexo-butterfly-swiper
+# see https://akilar.top/posts/8e1264d1/
+swiper:
+  enable: true # 开关
+  priority: 5 #过滤器优先权, default: 10
+  enable_page: all # 应用页面, <path> | all, default: all
+  exclude: #屏蔽页面
+    - /about/
+    - /tags/
+    - /categories/
+    - /draft/
+  timemode: date #date/updated, default: date
+  layout: # 挂载容器类型
+    type: id
+    name: recent-posts
+    index: 0
+  error_img: /img/default.webp #封面图片加载失败的默认封面
+  insertposition: afterbegin
+  default_descr: 太懒了，没有写描述信息，点进去看吧
+  swiper_css: https://npm.elemecdn.com/hexo-butterfly-swiper/lib/swiper.min.css #swiper css依赖
+  swiper_js: https://npm.elemecdn.com/hexo-butterfly-swiper/lib/swiper.min.js #swiper js依赖
+  custom_css: https://npm.elemecdn.com/hexo-butterfly-swiper/lib/swiperstyle.css # 适配主题样式补丁
+  custom_js: https://npm.elemecdn.com/hexo-butterfly-swiper/lib/swiper_init.js # swiper初始化方法
+
+# footer_beautify
+# 页脚计时器：[Native JS Timer](https://akilar.top/posts/b941af/)
+# 页脚徽标：[Add Github Badge](https://akilar.top/posts/e87ad7f8/)
+footer_beautify:
+  enable:
+    timer: false # 计时器开关
+    bdage: true # 徽标开关
+  priority: 5 #过滤器优先权
+  enable_page: all # 应用页面
+  exclude:
+    # - /posts/
+    # - /about/
+  layout: # 挂载容器类型
+    type: id
+    name: footer-wrap
+    index: 0
+  # 计时器部分配置项
+  runtime_js: https://npm.elemecdn.com/hexo-butterfly-footer-beautify@1.0.0/lib/runtime.js
+  runtime_css: https://npm.elemecdn.com/hexo-butterfly-footer-beautify@1.0.0/lib/runtime.css
+  # 徽标部分配置项
+  swiperpara: 0 #若非0，则开启轮播功能，每行徽标个数
+  bdageitem:
+    - link: https://hexo.io/ #徽标指向网站链接
+      shields: https://img.shields.io/badge/Frame-Hexo-blue?style=flat&logo=hexo #徽标API
+      message: 博客框架为Hexo_v7.0.0 #徽标提示语
+    - link: https://butterfly.js.org/
+      shields: https://img.shields.io/badge/Theme-Butterfly-6513df?style=flat&logo=bitdefender
+      message: 主题版本Butterfly_v4.13.0
+    - link: https://www.jsdelivr.com/
+      shields: https://img.shields.io/badge/CDN-jsDelivr-orange?style=flat&logo=jsDelivr
+      message: 本站使用JsDelivr为静态资源提供CDN加速
+    - link: https://github.com/
+      shields: https://img.shields.io/badge/Source-Github-d021d6?style=flat&logo=GitHub
+      message: 本站项目由Github托管
+    - link: http://creativecommons.org/licenses/by-nc-sa/4.0/
+      shields: https://img.shields.io/badge/Copyright-BY--NC--SA%204.0-d42328?style=flat&logo=Claris
+      message: 本站采用知识共享署名-非商业性使用-相同方式共享4.0国际许可协议进行许可
+  swiper_css: https://npm.elemecdn.com/hexo-butterfly-swiper/lib/swiper.min.css
+  swiper_js: https://npm.elemecdn.com/hexo-butterfly-swiper/lib/swiper.min.js
+  swiperbdage_init_js: https://npm.elemecdn.com/hexo-butterfly-footer-beautify/lib/swiperbdage_init.min.js
+
 # other
 # --------------------------------------
 
@@ -877,8 +940,8 @@ aplayerInject:
 snackbar:
   enable: false
   position: bottom-left
-  bg_light: '#49b1f5' # The background color of Toast Notification in light mode
-  bg_dark: '#1f1f1f' # The background color of Toast Notification in dark mode
+  bg_light: "#49b1f5" # The background color of Toast Notification in light mode
+  bg_dark: "#1f1f1f" # The background color of Toast Notification in dark mode
 
 # https://instant.page/
 # prefetch (預加載)
@@ -930,7 +993,7 @@ css_prefix: true
 # 插入代码到头部 </head> 之前 和 底部 </body> 之前
 inject:
   head:
-    - <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4649427_dkojwrlglfd.css">
+    - <link rel="stylesheet" href="//at.alicdn.com/t/c/font_4649427_kfnhq9l0oc.css">
   bottom:
     # - <script src="xxxx"></script>
 

@@ -1,0 +1,22 @@
+- class_name: 友情链接
+  class_desc: 对我有帮助的个人博客
+  link_list:
+    - name: 安知鱼
+      link: https://blog.anheyu.com/
+      avatar: https://npm.elemecdn.com/anzhiyu-blog-static@1.0.4/img/avatar.jpg
+      descr: 生活明朗，万物可爱
+      siteshot: https://npm.elemecdn.com/anzhiyu-theme-static@1.1.6/img/blog.anheyu.com.jpg
+    - name: 张洪Heo
+      link: https://blog.zhheo.com/
+      avatar: https://bu.dusays.com/2022/12/28/63ac2812183aa.png
+      descr: 分享设计与科技生活
+      siteshot: https://bu.dusays.com/2024/07/16/6695ebf7463be.png
+
+- class_name: 网站
+  class_desc: 值得推荐的网站
+  link_list:
+    - name: IconFont
+      link: https://www.iconfont.cn/
+      avatar: /link/icons/iconfont.svg
+      descr: 阿里提供的一个图标字体平台，图标非常丰富
+    - name: Vercel

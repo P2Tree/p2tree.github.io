@@ -12,6 +12,8 @@ cover: /img/20231014/index.webp
 top_img: /img/20231014/index.webp
 abbrlink: 73fc32a
 date: 2023-10-14 10:00:00
+description: 绝对是全网都没有的 Vim 使用硬干货经验
+swiper_index: "3"
 ---
 ## 开头叨叨
 

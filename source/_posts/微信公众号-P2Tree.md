@@ -6,7 +6,8 @@ index_img: /img/20240805/wechat_logo.webp
 banner_img: /img/20240805/wechat_logo.webp
 abbrlink: e8d522db
 date: 2024-08-05 22:50:32
-tags:
+swiper_index: "1"
+description: 我维护的微信公众号，欢迎来交个朋友
 ---
 我自己维护着一个微信公众号，公众号名字是 P2Tree。
 

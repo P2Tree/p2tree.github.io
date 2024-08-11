@@ -4,6 +4,7 @@ layout: about
 date: 2024-06-16 16:13:21
 comment: true
 ---
+
 <center> <code><strong>效率强迫症</strong></code> <code><strong>电子洁癖</strong></code> <code><strong>软件鉴赏师</strong></code> <code><strong>虚拟世界冒险家</strong></code> <code><strong>书虫</strong></code> <code><strong>图形创意学徒</strong></code> <code><strong>音律控</strong></code> <code><strong>赛博仓鼠</strong></code> <code><strong>夜猫子</strong></code> <code><strong>心流行者</strong></code> <code><strong>INTJ</strong></code> </center>
 
 # Hi, you

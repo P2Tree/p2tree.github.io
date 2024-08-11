@@ -10,7 +10,7 @@ index_img: /img/20230623/index.webp
 banner_img: /img/20230623/index.webp
 cover: /img/20230623/index.webp
 top_img: /img/20230623/index.webp
-abbrlink: '3229e191'
+abbrlink: "3229e191"
 date: 2023-06-23 10:00:00
 ---
 

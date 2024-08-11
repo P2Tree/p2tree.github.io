@@ -198,6 +198,7 @@
   },
   "active": "03e3cd9bfeef22d1",
   "lastOpenFiles": [
+    "link/icons/vercel.svg",
     "link/icons/vercel.ico",
     "css/profile.css",
     "_posts/为什么终端开发离不开Tmux.md",
@@ -230,7 +231,6 @@
     "img/20240810/WechatIMG140.jpeg",
     "img/20240810",
     "img/20210313/index.webp",
-    "img/20210313",
     "_posts/LLVM后端实践笔记-5-全局变量.md",
     "_posts/LLVM后端实践笔记-3-算术和逻辑指令.md",
     "_posts/LLVM后端实践笔记-4-生成目标文件.md",

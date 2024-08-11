@@ -21,5 +21,5 @@
       descr: 阿里提供的一个图标字体平台，图标非常丰富
     - name: Vercel
       link: https://vercel.com/
-      avatar: /link/icons/vercel.ico
+      avatar: /link/icons/vercel.svg
       descr: 非常流行的自动化部署平台，提供很多有用工具

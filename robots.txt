@@ -1,0 +1,15 @@
+# hexo robots.txt
+User-agent: *
+Allow: /
+Allow: /archives/
+
+Disallow: /js/
+Disallow: /css/
+Disallow: /fonts/
+Disallow: /about/ 
+Disallow: /img/
+Disallow: /link/
+Disallow: /_data/
+
+Sitemap: https://p2tree.top/sitemap.xml
+Sitemap: https://p2tree.top/baidusitemap.xml

@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://p2tree.top/link/index.html</loc>
+    <loc>https://p2tree.top/tags/index.html</loc>
     
     <lastmod>2024-09-19</lastmod>
     
@@ -11,7 +11,7 @@
   </url>
   
   <url>
-    <loc>https://p2tree.top/tags/index.html</loc>
+    <loc>https://p2tree.top/link/index.html</loc>
     
     <lastmod>2024-09-19</lastmod>
     
@@ -38,15 +38,6 @@
   </url>
   
   <url>
-    <loc>https://p2tree.top/posts/6861d72c.html</loc>
-    
-    <lastmod>2024-09-19</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://p2tree.top/posts/dd4fe3d1.html</loc>
     
     <lastmod>2024-09-19</lastmod>
@@ -57,6 +48,15 @@
   
   <url>
     <loc>https://p2tree.top/posts/b32e3378.html</loc>
+    
+    <lastmod>2024-09-19</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://p2tree.top/posts/6861d72c.html</loc>
     
     <lastmod>2024-09-19</lastmod>
     
@@ -507,14 +507,14 @@
   </url>
   
   <url>
-    <loc>https://p2tree.top/tags/LLVM/</loc>
+    <loc>https://p2tree.top/tags/%E7%BC%96%E8%AF%91%E5%99%A8/</loc>
     <lastmod>2024-09-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://p2tree.top/tags/%E7%BC%96%E8%AF%91%E5%99%A8/</loc>
+    <loc>https://p2tree.top/tags/LLVM/</loc>
     <lastmod>2024-09-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -619,14 +619,14 @@
   </url>
   
   <url>
-    <loc>https://p2tree.top/tags/%E5%93%B2%E5%AD%A6/</loc>
+    <loc>https://p2tree.top/tags/%E4%B8%8E%E7%94%9F%E6%B4%BB%E5%A6%A5%E5%8D%8F/</loc>
     <lastmod>2024-09-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
   </url>
   
   <url>
-    <loc>https://p2tree.top/tags/%E4%B8%8E%E7%94%9F%E6%B4%BB%E5%A6%A5%E5%8D%8F/</loc>
+    <loc>https://p2tree.top/tags/%E5%93%B2%E5%AD%A6/</loc>
     <lastmod>2024-09-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>

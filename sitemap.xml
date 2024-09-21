@@ -2,24 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://p2tree.top/about/index.html</loc>
-    
-    <lastmod>2024-09-21</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>https://p2tree.top/categories/index.html</loc>
-    
-    <lastmod>2024-09-21</lastmod>
-    
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>https://p2tree.top/link/index.html</loc>
     
     <lastmod>2024-09-21</lastmod>
@@ -38,7 +20,16 @@
   </url>
   
   <url>
-    <loc>https://p2tree.top/posts/3e7e0054.html</loc>
+    <loc>https://p2tree.top/about/index.html</loc>
+    
+    <lastmod>2024-09-21</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://p2tree.top/categories/index.html</loc>
     
     <lastmod>2024-09-21</lastmod>
     
@@ -48,6 +39,15 @@
   
   <url>
     <loc>https://p2tree.top/posts/b32e3378.html</loc>
+    
+    <lastmod>2024-09-21</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://p2tree.top/posts/3e7e0054.html</loc>
     
     <lastmod>2024-09-21</lastmod>
     
@@ -66,6 +66,15 @@
   
   <url>
     <loc>https://p2tree.top/posts/6861d72c.html</loc>
+    
+    <lastmod>2024-09-21</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://p2tree.top/posts/eec2e18.html</loc>
     
     <lastmod>2024-09-21</lastmod>
     

@@ -1,0 +1,1 @@
+const today=new Date;const month=today.getMonth()+1;const day=today.getDate();const specialDays=["5-12","7-7","9-3","9-18","12-13","9-24"];const currentDay=`${month}-${day}`;if(specialDays.includes(currentDay)){document.body.style.filter="grayscale(100%)"}

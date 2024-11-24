@@ -11,11 +11,12 @@ https://p2tree.top/posts/b32e3378.html
 https://p2tree.top/posts/4fefbc0d.html
 https://p2tree.top/about/index.html
 https://p2tree.top/categories/index.html
-https://p2tree.top/posts/6861d72c.html
+https://p2tree.top/posts/86730351.html
 https://p2tree.top/posts/49819b87.html
 https://p2tree.top/posts/3d315b3e.html
 https://p2tree.top/posts/41507ee5.html
 https://p2tree.top/posts/e40506ec.html
+https://p2tree.top/posts/6861d72c.html
 https://p2tree.top/posts/c82ee02e.html
 https://p2tree.top/posts/5afd8958.html
 https://p2tree.top/posts/22b58fab.html
@@ -72,10 +73,11 @@ https://p2tree.top/tags/%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/
 https://p2tree.top/tags/%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/
 https://p2tree.top/tags/CUDA/
 https://p2tree.top/tags/%E7%BC%96%E8%AF%91%E5%99%A8/
+https://p2tree.top/tags/%E8%AF%91%E6%96%87/
+https://p2tree.top/tags/Git/
 https://p2tree.top/tags/%E5%8D%9A%E5%AE%A2/
 https://p2tree.top/tags/Hexo/
 https://p2tree.top/tags/LLVM/
-https://p2tree.top/tags/%E8%AF%91%E6%96%87/
 https://p2tree.top/tags/%E4%BB%BF%E7%9C%9F/
 https://p2tree.top/tags/Vim/
 https://p2tree.top/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E5%85%B7/
